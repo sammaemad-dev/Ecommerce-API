@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 // Define the address sub-document schema
 const addressSchema = new mongoose.Schema({
@@ -21,6 +22,7 @@ const addressSchema = new mongoose.Schema({
 
 }, { _id: false });
 
+// Define the user schema
 const userSchema = new mongoose.Schema({
 	username:{
 		type:String,
@@ -82,7 +84,19 @@ const userSchema = new mongoose.Schema({
 	
 }, {timestamps:true})
 
+// Pre-save hook to hash the password before saving in DB
+userSchema.pre('save', async function() {
 
+    // Only hash the password if it has been modified (or is new)
+    if (!this.isModified('password')) return;
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+
+    } catch (err) {
+        throw err
+    }
+});
 
 const User = mongoose.model('User', userSchema);
 
