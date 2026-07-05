@@ -2,10 +2,10 @@
   "name": "ecommerce-api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "start": "node",
+    "dev": "nodemon"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +15,7 @@
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.3",
     "slugify": "^1.6.9",
     "validator": "^13.15.35"
