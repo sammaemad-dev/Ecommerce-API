@@ -1,5 +1,3 @@
-import { loginSchema } from "../validators/auth.validator";
-
 const {
   register,
   login,
