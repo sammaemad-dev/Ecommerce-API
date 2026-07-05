@@ -57,17 +57,17 @@ const userSchema = new mongoose.Schema({
 	
 	role:{
 		type:String,
-		enum:['admin','costumer'],
-		default:'costumer'
+		enum:['admin','customer'],
+		default:'customer'
 
 	},
 
     addresses: [addressSchema],
 
-    wishList:{
+    wishList:[{
 		type:mongoose.Schema.Types.ObjectId,
 		ref:'Product'
-	},
+	}],
 
 	isVerified:{
 		type:Boolean,
@@ -97,6 +97,16 @@ userSchema.pre('save', async function() {
         throw err
     }
 });
+
+// compare candidate password with the hashed password in DB
+userSchema.methods.comparePassword = async function(candidatePws) {
+    try {
+        
+        return await bcrypt.compare(candidatePws, this.password);
+    } catch (err) {
+        throw err;
+    }
+};
 
 const User = mongoose.model('User', userSchema);
 
