@@ -1,6 +1,6 @@
-const joi = require("joi");
+const Joi = require("joi");
 
-const productValidation = joi.object({
+const productValidation = Joi.object({
   name: Joi.string().trim().max(200).required(),
 
   shortDescription: Joi.string().trim().max(500).required(),
