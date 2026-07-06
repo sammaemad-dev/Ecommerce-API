@@ -10,6 +10,8 @@ RESTful E-Commerce API built with Node.js, Express, MongoDB, With JWT Authentica
 - Installation
 - Environment Variables
 - Running
+- Endpoints
+- Deployment
 
 # Features
 
