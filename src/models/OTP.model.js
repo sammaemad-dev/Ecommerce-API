@@ -15,17 +15,18 @@ const otpSchema = new mongoose.Schema(
     expiresAt: {
       type: Date,
       required: true,
-      // This creates a TTL index. MongoDB will automatically delete
-      // the document when the current time matches expiresAt.
-      index: { expires: 0 },
+      index: { expires: 0 }, // TTL index
     },
     userData: {
       type: Object,
-      required: false, // Optional per your requirements
+      required: false,
+    },
+    isUsed: {
+      type: Boolean,
     },
   },
   {
-    timestamps: true, // This automatically handles your 'createdAt' and 'updatedAt' fields
+    timestamps: true, // handling created and expired date
   },
 );
 
