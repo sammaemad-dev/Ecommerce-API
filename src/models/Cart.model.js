@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const cartItemSchema = new mongoose.Schema(
   {
@@ -96,4 +96,4 @@ cartSchema.virtual("total").get(function () {
 
 const Cart = mongoose.model("Cart", cartSchema);
 
-export default Cart;
+module.exports = Cart;
