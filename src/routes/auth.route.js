@@ -3,18 +3,25 @@ const {
   login,
   verifyOTP,
   logout,
-  getProfile,
   forgotPassword,
   resetPassword,
 } = require("../controllers/auth.controller");
+const validate = require("../middleware/validate.middleware");
+const {
+  registerValidation,
+  loginValidation,
+  verifyOTPValidation,
+  forgotPasswordValidation,
+  resetPasswordValidation,
+} = require("../validation/auth.validation");
 
 const router = require("express").Router();
 
-router.post("/register", register);
-router.post("/login", login);
-router.post("/verifyOTP", verifyOTP);
+router.post("/register", validate(registerValidation), register);
+router.post("/login", validate(loginValidation), login);
+router.post("/verifyOTP", validate(verifyOTPValidation), verifyOTP);
 router.post("/logout", logout);
-router.post("/forgotPassword", forgotPassword);
-router.post("/resetPassword", resetPassword);
+router.post("/forgotPassword", validate(forgotPasswordValidation), forgotPassword);
+router.post("/resetPassword", validate(resetPasswordValidation), resetPassword);
 
-export default router;
+module.exports = router;
