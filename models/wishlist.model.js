@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const wishlistSchema = new mongoose.Schema(
   {
@@ -9,12 +9,16 @@ const wishlistSchema = new mongoose.Schema(
       unique: true,
       index: true,
     },
-    products: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
-      },
-    ],
+
+    products: {
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+        },
+      ],
+      default: [],
+    },
   },
   {
     timestamps: true,
@@ -28,4 +32,4 @@ wishlistSchema.pre(/^find/, function (next) {
 
 const Wishlist = mongoose.model("Wishlist", wishlistSchema);
 
-export default Wishlist;
+module.exports = Wishlist;
