@@ -1,3 +1,10 @@
+# To start the project in dev mode
+
+- npm run dev
+
+# To start the project in production mode
+
+- npm start
 # E-Commerce Backend API
 
 RESTful E-Commerce API built with Node.js, Express, MongoDB, With JWT Authentication and Authorization.
