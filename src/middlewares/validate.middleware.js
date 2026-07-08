@@ -1,14 +1,20 @@
 const validate = (schema) => {
   return (req, res, next) => {
-    const { error, value } = schema.validate(req.body, {
+    const inputs = {
+      ...req.body,
+      ...req.params,
+      ...req.query,
+    };
+    const { error, value } = schema.validate(inputs, {
       abortEarly: false,
-      stripUnknown: true,
+      stripUnknown: true, //remove unknow, not required fields
     });
 
     if (error) {
       return res.status(400).json({
         success: false,
         message: "Validation failed",
+        errorCount: error.details.length,
         errors: error.details.map((detail) => ({
           field: detail.path.join("."),
           message: detail.message,
@@ -16,7 +22,7 @@ const validate = (schema) => {
       });
     }
 
-    req.body = value;
+    req.validatedData = value; //validatedData =  req.body , req.query , req.params
     next();
   };
 };
