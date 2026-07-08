@@ -1,13 +1,31 @@
 require("dotenv").config();
+
 const asyncHandler = require("express-async-handler");
 const authService = require("../services/auth.service");
 
-const register = asyncHandler(async (req, res, next) => {});
+const register = asyncHandler(async (req, res) => {
+  const result = await authService.register(req.body);
 
-const verifyOTP = asyncHandler(async (req, res, next) => {});
+  res.status(201).json({
+    success: true,
+    message: "OTP sent successfully",
+    data: result,
+  });
+});
 
-const login = asyncHandler(async (req, res, next) => {
-  const { user, accessToken, refreshToken } = await authService.login(req.body);
+const verifyOTP = asyncHandler(async (req, res) => {
+  const result = await authService.verifyOTP(req.body);
+
+  res.status(201).json({
+    success: true,
+    message: "Account verified successfully",
+    data: result,
+  });
+});
+
+const login = asyncHandler(async (req, res) => {
+  const { user, accessToken, refreshToken } =
+    await authService.login(req.body);
 
   res
     .cookie("refreshToken", refreshToken, {
@@ -37,8 +55,10 @@ const refresh = asyncHandler(async (req, res) => {
     });
   }
 
-  const { accessToken, refreshToken: newRefreshToken } =
-    await authService.refresh(refreshToken);
+  const {
+    accessToken,
+    refreshToken: newRefreshToken,
+  } = await authService.refresh(refreshToken);
 
   res
     .cookie("refreshToken", newRefreshToken, {
@@ -54,7 +74,7 @@ const refresh = asyncHandler(async (req, res) => {
     });
 });
 
-const logout = asyncHandler(async (req, res, next) => {
+const logout = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (refreshToken) {
@@ -69,19 +89,19 @@ const logout = asyncHandler(async (req, res, next) => {
   });
 });
 
-const forgotPassword = asyncHandler(async (req, res, next) => {});
+const forgotPassword = asyncHandler(async (req, res) => {});
 
-const resetPassword = asyncHandler(async (req, res, next) => {});
+const resetPassword = asyncHandler(async (req, res) => {});
 
-const getProfile = asyncHandler(async (req, res, next) => {});
+const getProfile = asyncHandler(async (req, res) => {});
 
 module.exports = {
   register,
   verifyOTP,
   login,
+  refresh,
   logout,
   forgotPassword,
   resetPassword,
   getProfile,
-  refresh
 };

@@ -6,7 +6,7 @@ const {
   forgotPassword,
   resetPassword,
 } = require("../controllers/auth.controller");
-const validate = require("../middleware/validate.middleware");
+const validate = require("../middlewares/validate.middleware");
 const {
   registerValidation,
   loginValidation,
