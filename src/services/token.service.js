@@ -52,17 +52,17 @@ async function verifyRefreshToken(token) {
   }
   return payload;
 }
-async function generateResetPassToken(user) {
+async function generateResetToken(user) {
   const payload = { id: user._id, email: user.email };
 
   const resetToken = jwt.sign(payload, RESET_TOKEN_SECRET, {
     expiresIn: RESET_TOKEN_EXPIRY,
   });
 
-  return resetToken;
+  return { resetToken, RESET_TOKEN_EXPIRY };
 }
 
-function verifyResetToken(token) {
+async function verifyResetToken(token) {
   return jwt.verify(token, RESET_TOKEN_SECRET);
 }
 async function deleteRefreshToken(refreshToken) {
@@ -83,8 +83,10 @@ async function rotateRefreshToken(refreshToken) {
 
 module.exports = {
   generateTokens,
+  generateResetToken,
   verifyAccessToken,
   verifyRefreshToken,
+  verifyResetToken,
   deleteRefreshToken,
   deleteAllRefreshToken,
   rotateRefreshToken,
