@@ -170,19 +170,47 @@ async function forgotPassword(data) {
       Date.now() * Number(resetToken.RESET_TOKEN_EXPIRY) * 60 * 1000;
     user.save();
     // creating the reset password token
+
+    // sending the mail for the user
     await sendEmail({
       to: email,
       subject: "Password Reset Request",
       text: `Your verification code is ${otp}. It expires in ${OTP_EXPIRY_MINUTES} minutes.`,
     });
+    // sending the mail for the user
+
     return resetToken.resetToken;
   } catch (e) {
     await OTP.deleteMany({ email });
-    throw createError(e.message, e.statusCode);
+    throw createError(`${e.message}`, e.statusCode);
   }
 }
 
-async function resetPassword(data) {}
+async function resetPassword(data) {
+  try {
+    const token = data.token.trim();
+    const newPassword = data.newPassword.trim();
+    const confirmPassword = data.confirmPassword.trim();
+    if (newPassword !== confirmPassword)
+      createError("Confirm Password Mismatched", 400);
+
+    const resetPasswordToken = await bcrypt.hash(token, 10);
+
+    const user = await User.findOne({ resetPasswordToken });
+    if (!user) createError("User Not Found", 404);
+
+    if (user.resetPasswordExpire > Date.now())
+      createError(
+        "Token Has Been Expired. please request a new reset token",
+        400,
+      );
+
+    user.password = newPassword;
+    user.save();
+  } catch (e) {
+    createError(`${e.message}`, e.statusCode);
+  }
+}
 
 async function logoutAll(userId) {
   await tokenService.deleteAllRefreshToken(userId);
