@@ -8,7 +8,8 @@ const authMiddleware = async (req, res, next) => {
     }
     try {
         const decodedToken = await verifyAccessToken(reqToken)
-        req.user = decodedToken.id
+        // Haidy: fixed key name, payload has "userId" not "id"
+        req.user = { _id: decodedToken.userId }
         next()
     } catch (e) {
         return res.status(401).json({ error: "Invalid or expired token" })
@@ -21,11 +22,10 @@ const reGenerateAccessToken = async (req, res, next) => {
         return res.status(401).json({ error: "No token provided" })
     }
     try {
-        // verify first the Refresh Token
-        // if the token was valid generate a new Access Token
         const decodedToken = await verifyRefreshToken(reqToken)
         console.log(decodedToken);
-        const newAccessToken = generateAccessToken({ id: decodedToken.id })
+        // Haidy: same fix here
+        const newAccessToken = generateAccessToken({ id: decodedToken.userId })
         res.json({ accessToken: newAccessToken })
 
     } catch (e) {
