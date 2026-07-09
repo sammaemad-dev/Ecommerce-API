@@ -109,6 +109,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   });
 });
 
+// Haidy: Get Profile endpoint
 const getProfile = asyncHandler(async (req, res) => {
   const result = await authService.getProfile(req.user._id);
 
@@ -119,6 +120,7 @@ const getProfile = asyncHandler(async (req, res) => {
   });
 });
 
+// Haidy: Update Profile endpoint
 const updateProfile = asyncHandler(async (req, res) => {
   const result = await authService.updateProfile(req.user._id, req.body);
 
@@ -129,6 +131,7 @@ const updateProfile = asyncHandler(async (req, res) => {
   });
 });
 
+// Haidy: Change Password endpoint
 const changePassword = asyncHandler(async (req, res) => {
   const result = await authService.changePassword(req.user._id, req.body);
 
