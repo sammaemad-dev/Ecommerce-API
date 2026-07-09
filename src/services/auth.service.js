@@ -136,16 +136,10 @@ async function logout(refreshToken) {
 async function forgotPassword(data) {
   try {
     const email = data.email.trim().toLowerCase();
-    if (!email)
-      return res
-        .status(400)
-        .json({ success: false, message: "Email is required" });
+    if (!email) throw createError("Email is Required", 400);
 
     const user = await User.findOne({ email });
-    if (!user)
-      return res
-        .status(404)
-        .json({ success: false, message: "User Not Found" });
+    if (!user) throw createError("User Not Found", 404);
 
     // delete many existing otps for the same email to make sure nothing is being reused
     await Otp.deleteMany({ email });
@@ -164,22 +158,19 @@ async function forgotPassword(data) {
         email,
       },
     });
-
     await otpRecord.save();
     await sendEmail({
       to: email,
       subject: "Password Reset Request",
       text: `Your verification code is ${otp}. It expires in ${OTP_EXPIRY_MINUTES} minutes.`,
     });
-    return res.status(200).json({
-      success: true,
-      message: `OTP Sent successfully To Your Email ${email}`,
-    });
   } catch (e) {
     await OTP.deleteMany({ email });
     throw createError(e.message, e.statusCode);
   }
 }
+
+async function resetPassword(data) {}
 
 async function logoutAll(userId) {
   await tokenService.deleteAllRefreshToken(userId);
