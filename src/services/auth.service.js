@@ -3,6 +3,7 @@ const OTP = require("../models/OTP.model");
 const tokenService = require("./token.service");
 const generateOTP = require("../utils/generateOTP");
 const sendEmail = require("../utils/sendEmail");
+const bcrypt = require("bcrypt");
 
 const OTP_EXPIRY_MINUTES = 10;
 
@@ -142,14 +143,14 @@ async function forgotPassword(data) {
     if (!user) throw createError("User Not Found", 404);
 
     // delete many existing otps for the same email to make sure nothing is being reused
-    await Otp.deleteMany({ email });
+    await OTP.deleteMany({ email });
 
     const otp = generateOTP();
     const hashedOtp = await bcrypt.hash(otp, 10);
     // expires in 10 minutes from now
     const expiresAt = Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000;
 
-    const otpRecord = new Otp({
+    const otpRecord = new OTP({
       email,
       otp: hashedOtp,
       expiresAt,
@@ -175,7 +176,6 @@ async function forgotPassword(data) {
 
     return resetToken.resetToken;
   } catch (e) {
-    await OTP.deleteMany({ email });
     throw createError(`${e.message}`, e.statusCode);
   }
 }
@@ -195,14 +195,14 @@ async function resetPassword(data) {
       resetPasswordExpire: { $gt: Date.now() },
     });
 
-    if (!user) createError("Token is invalid or has expired.", 400);
+    if (!user) throw createError("Token is invalid or has expired.", 400);
 
     user.password = newPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save();
   } catch (e) {
-    createError(`${e.message}`, e.statusCode);
+    throw createError(`${e.message}`, e.statusCode);
   }
 }
 
@@ -229,4 +229,6 @@ module.exports = {
   logout,
   logoutAll,
   refresh,
+  forgotPassword,
+  resetPassword,
 };
