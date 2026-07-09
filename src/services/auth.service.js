@@ -144,6 +144,7 @@ async function forgotPassword(data) {
     // delete many existing otps for the same email to make sure nothing is being reused
     await Otp.deleteMany({ email });
 
+    // Creating and saving OTP
     const otp = generateOTP();
     const hashedOtp = await bcrypt.hash(otp, 10);
     // expires in 10 minutes from now
@@ -159,11 +160,22 @@ async function forgotPassword(data) {
       },
     });
     await otpRecord.save();
+    // Creating and saving OTP
+
+    // creating the reset password token
+    const resetToken = await tokenService.generateResetToken(user);
+    const hashedResetToken = await bcrypt.hash(resetToken.resetToken, 10);
+    user.resetPasswordToken = hashedResetToken;
+    user.resetPasswordExpire =
+      Date.now() * Number(resetToken.RESET_TOKEN_EXPIRY) * 60 * 1000;
+    user.save();
+    // creating the reset password token
     await sendEmail({
       to: email,
       subject: "Password Reset Request",
       text: `Your verification code is ${otp}. It expires in ${OTP_EXPIRY_MINUTES} minutes.`,
     });
+    return resetToken.resetToken;
   } catch (e) {
     await OTP.deleteMany({ email });
     throw createError(e.message, e.statusCode);
