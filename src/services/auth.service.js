@@ -53,7 +53,10 @@ async function register(data) {
   } catch (emailErr) {
     // Roll back the OTP record if we couldn't actually notify the user.
     await OTP.deleteOne({ email });
-    throw createError("Could not send verification email. Please try again.", 502);
+    throw createError(
+      "Could not send verification email. Please try again.",
+      502,
+    );
   }
 
   return { email };
@@ -71,7 +74,10 @@ async function verifyOTP(data) {
 
   const otpRecord = await OTP.findOne({ email });
   if (!otpRecord) {
-    throw createError("OTP not found or already used. Please register again.", 400);
+    throw createError(
+      "OTP not found or already used. Please register again.",
+      400,
+    );
   }
 
   if (otpRecord.expiresAt < new Date()) {
@@ -117,13 +123,62 @@ async function login(data) {
     throw createError("Invalid email or password", 401);
   }
 
-  const { accessToken, refreshToken } = await tokenService.generateTokens(user._id.toString());
+  const { accessToken, refreshToken } = await tokenService.generateTokens(
+    user._id.toString(),
+  );
 
   return { user: formatUserResponse(user), accessToken, refreshToken };
 }
 
 async function logout(refreshToken) {
   await tokenService.deleteRefreshToken(refreshToken);
+}
+async function forgotPassword(data) {
+  try {
+    const email = data.email.trim().toLowerCase();
+    if (!email)
+      return res
+        .status(400)
+        .json({ success: false, message: "Email is required" });
+
+    const user = await User.findOne({ email });
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "User Not Found" });
+
+    // delete many existing otps for the same email to make sure nothing is being reused
+    await Otp.deleteMany({ email });
+
+    const otp = generateOTP();
+    const hashedOtp = await bcrypt.hash(otp, 10);
+    // expires in 10 minutes from now
+    const expiresAt = Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000;
+
+    const otpRecord = new Otp({
+      email,
+      otp: hashedOtp,
+      expiresAt,
+      userData: {
+        username: user.username,
+        email,
+      },
+    });
+
+    await otpRecord.save();
+    await sendEmail({
+      to: email,
+      subject: "Password Reset Request",
+      text: `Your verification code is ${otp}. It expires in ${OTP_EXPIRY_MINUTES} minutes.`,
+    });
+    return res.status(200).json({
+      success: true,
+      message: `OTP Sent successfully To Your Email ${email}`,
+    });
+  } catch (e) {
+    await OTP.deleteMany({ email });
+    throw createError(e.message, e.statusCode);
+  }
 }
 
 async function logoutAll(userId) {
