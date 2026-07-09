@@ -5,8 +5,10 @@ const crypto = require("crypto");
 
 const ACCESS_TOKEN_SECRET = process.env.JWT_ACCESS_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET;
+const RESET_TOKEN_SECRET = process.env.JWT_RESET_SECRET;
 const ACCESS_TOKEN_EXPIRY = "15m";
 const REFRESH_TOKEN_EXPIRY = "7d";
+const RESET_TOKEN_EXPIRY = "15m";
 
 function hashToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -50,7 +52,19 @@ async function verifyRefreshToken(token) {
   }
   return payload;
 }
+async function generateResetPassToken(user) {
+  const payload = { id: user._id, email: user.email };
 
+  const resetToken = jwt.sign(payload, RESET_TOKEN_SECRET, {
+    expiresIn: RESET_TOKEN_EXPIRY,
+  });
+
+  return resetToken;
+}
+
+function verifyResetToken(token) {
+  return jwt.verify(token, RESET_TOKEN_SECRET);
+}
 async function deleteRefreshToken(refreshToken) {
   await RefreshToken.deleteOne({ token: hashToken(refreshToken) });
 }
