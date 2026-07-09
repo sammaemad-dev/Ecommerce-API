@@ -144,7 +144,6 @@ async function forgotPassword(data) {
     // delete many existing otps for the same email to make sure nothing is being reused
     await Otp.deleteMany({ email });
 
-    // Creating and saving OTP
     const otp = generateOTP();
     const hashedOtp = await bcrypt.hash(otp, 10);
     // expires in 10 minutes from now
@@ -160,24 +159,19 @@ async function forgotPassword(data) {
       },
     });
     await otpRecord.save();
-    // Creating and saving OTP
 
-    // creating the reset password token
     const resetToken = await tokenService.generateResetToken(user);
     const hashedResetToken = await bcrypt.hash(resetToken.resetToken, 10);
     user.resetPasswordToken = hashedResetToken;
     user.resetPasswordExpire =
       Date.now() * Number(resetToken.RESET_TOKEN_EXPIRY) * 60 * 1000;
     user.save();
-    // creating the reset password token
 
-    // sending the mail for the user
     await sendEmail({
       to: email,
       subject: "Password Reset Request",
       text: `Your verification code is ${otp}. It expires in ${OTP_EXPIRY_MINUTES} minutes.`,
     });
-    // sending the mail for the user
 
     return resetToken.resetToken;
   } catch (e) {
@@ -196,17 +190,17 @@ async function resetPassword(data) {
 
     const resetPasswordToken = await bcrypt.hash(token, 10);
 
-    const user = await User.findOne({ resetPasswordToken });
-    if (!user) createError("User Not Found", 404);
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
 
-    if (user.resetPasswordExpire > Date.now())
-      createError(
-        "Token Has Been Expired. please request a new reset token",
-        400,
-      );
+    if (!user) createError("Token is invalid or has expired.", 400);
 
     user.password = newPassword;
-    user.save();
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save();
   } catch (e) {
     createError(`${e.message}`, e.statusCode);
   }
