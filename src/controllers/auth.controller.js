@@ -24,8 +24,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
 });
 
 const login = asyncHandler(async (req, res) => {
-  const { user, accessToken, refreshToken } =
-    await authService.login(req.body);
+  const { user, accessToken, refreshToken } = await authService.login(req.body);
 
   res
     .cookie("refreshToken", refreshToken, {
@@ -55,10 +54,8 @@ const refresh = asyncHandler(async (req, res) => {
     });
   }
 
-  const {
-    accessToken,
-    refreshToken: newRefreshToken,
-  } = await authService.refresh(refreshToken);
+  const { accessToken, refreshToken: newRefreshToken } =
+    await authService.refresh(refreshToken);
 
   res
     .cookie("refreshToken", newRefreshToken, {
@@ -100,12 +97,11 @@ const forgotPassword = asyncHandler(async (req, res) => {
 });
 
 const resetPassword = asyncHandler(async (req, res) => {
-  const result = await authService.resetPassword(req.body);
+  await authService.resetPassword(req.body);
 
   res.status(200).json({
     success: true,
     message: "Password reset successfully",
-    data: result,
   });
 });
 

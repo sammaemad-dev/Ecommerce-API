@@ -3,6 +3,7 @@ const OTP = require("../models/OTP.model");
 const tokenService = require("./token.service");
 const generateOTP = require("../utils/generateOTP");
 const sendEmail = require("../utils/sendEmail");
+const bcrypt = require("bcrypt");
 
 const OTP_EXPIRY_MINUTES = 10;
 
@@ -46,7 +47,10 @@ async function register(data) {
     });
   } catch (emailErr) {
     await OTP.deleteOne({ email });
-    throw createError("Could not send verification email. Please try again.", 502);
+    throw createError(
+      "Could not send verification email. Please try again.",
+      502,
+    );
   }
 
   return { email };
@@ -58,7 +62,10 @@ async function verifyOTP(data) {
 
   const otpRecord = await OTP.findOne({ email });
   if (!otpRecord) {
-    throw createError("OTP not found or already used. Please register again.", 400);
+    throw createError(
+      "OTP not found or already used. Please register again.",
+      400,
+    );
   }
 
   if (otpRecord.expiresAt < new Date()) {
@@ -103,13 +110,86 @@ async function login(data) {
     throw createError("Invalid email or password", 401);
   }
 
-  const { accessToken, refreshToken } = await tokenService.generateTokens(user._id.toString());
+  const { accessToken, refreshToken } = await tokenService.generateTokens(
+    user._id.toString(),
+  );
 
   return { user: formatUserResponse(user), accessToken, refreshToken };
 }
 
 async function logout(refreshToken) {
   await tokenService.deleteRefreshToken(refreshToken);
+}
+async function forgotPassword(data) {
+  try {
+    const email = data.email.trim().toLowerCase();
+    if (!email) throw createError("Email is Required", 400);
+
+    const user = await User.findOne({ email });
+    if (!user) throw createError("User Not Found", 404);
+
+    // delete many existing otps for the same email to make sure nothing is being reused
+    await OTP.deleteMany({ email });
+
+    const otp = generateOTP();
+    const hashedOtp = await bcrypt.hash(otp, 10);
+    // expires in 10 minutes from now
+    const expiresAt = Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000;
+
+    const otpRecord = new OTP({
+      email,
+      otp: hashedOtp,
+      expiresAt,
+      userData: {
+        username: user.username,
+        email,
+      },
+    });
+    await otpRecord.save();
+
+    const resetToken = await tokenService.generateResetToken(user);
+    const hashedResetToken = await bcrypt.hash(resetToken.resetToken, 10);
+    user.resetPasswordToken = hashedResetToken;
+    user.resetPasswordExpire =
+      Date.now() * Number(resetToken.RESET_TOKEN_EXPIRY) * 60 * 1000;
+    user.save();
+
+    await sendEmail({
+      to: email,
+      subject: "Password Reset Request",
+      text: `Your verification code is ${otp}. It expires in ${OTP_EXPIRY_MINUTES} minutes.`,
+    });
+
+    return resetToken.resetToken;
+  } catch (e) {
+    throw createError(`${e.message}`, e.statusCode);
+  }
+}
+
+async function resetPassword(data) {
+  try {
+    const token = data.token.trim();
+    const newPassword = data.newPassword.trim();
+    const confirmPassword = data.confirmPassword.trim();
+    if (newPassword !== confirmPassword)
+      createError("Confirm Password Mismatched", 400);
+
+    const resetPasswordToken = await bcrypt.hash(token, 10);
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) throw createError("Token is invalid or has expired.", 400);
+
+    user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save();
+  } catch (e) {
+    throw createError(`${e.message}`, e.statusCode);
+  }
 }
 
 async function logoutAll(userId) {
@@ -212,6 +292,8 @@ module.exports = {
   logout,
   logoutAll,
   refresh,
+  forgotPassword,
+  resetPassword,
   getProfile,
   updateProfile,
   changePassword,
