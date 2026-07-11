@@ -1,5 +1,5 @@
-import multer from 'multer';
-import path from 'path';
+multer = require('multer');
+path = require('path');
 
 const storage = multer.diskStorage({});
 
@@ -16,7 +16,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-export const uploadMiddleware = multer({
+module.exports = multer({
   storage,
   fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit

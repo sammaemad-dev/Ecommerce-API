@@ -1,7 +1,7 @@
-import cloudinary from '../config/cloudinary.js';
+const cloudinary = require('../config/cloudinary.js');
 
 // Upload a file to Cloudinary
-export const uploadToCloudinary = async (filePath, folder = 'products') => {
+const uploadToCloudinary = async (filePath, folder = 'products') => {
   try {
     if (!filePath) throw new Error("No file provided for upload.");
 
@@ -21,8 +21,12 @@ export const uploadToCloudinary = async (filePath, folder = 'products') => {
   }
 };
 
+module.exports = {
+  uploadToCloudinary,
+};
+
 // Deletes an image from Cloudinary using its public_id
-export const deleteFromCloudinary = async (publicId) => {
+module.exports.deleteFromCloudinary = async (publicId) => {
   try {
     if (!publicId) throw new Error("No public_id provided for deletion.");
 
