@@ -13,11 +13,6 @@ function createError(message, statusCode) {
   return err;
 }
 
-/**
- * Does NOT create the user yet. Stores the OTP + pending user data in the
- * OTP collection with an expiry, then emails the code. The User document
- * is only created in verifyOTP once the code is confirmed.
- */
 async function register(data) {
   const email = data.email.trim().toLowerCase();
   const { username, password, phone } = data;
@@ -32,7 +27,6 @@ async function register(data) {
     throw createError("Username is already taken", 409);
   }
 
-  // Remove any previous pending OTP for this email so old codes can't be reused.
   await OTP.deleteMany({ email });
 
   const otp = generateOTP();
@@ -52,7 +46,6 @@ async function register(data) {
       text: `Your verification code is ${otp}. It expires in ${OTP_EXPIRY_MINUTES} minutes.`,
     });
   } catch (emailErr) {
-    // Roll back the OTP record if we couldn't actually notify the user.
     await OTP.deleteOne({ email });
     throw createError(
       "Could not send verification email. Please try again.",
@@ -63,12 +56,6 @@ async function register(data) {
   return { email };
 }
 
-/**
- * Validates the OTP (existence, expiry, match), creates the User account
- * from the data stored alongside the OTP, then deletes the OTP record.
- * Per the agreed flow, this does NOT auto-login the user — it only
- * confirms account creation; the user logs in separately afterwards.
- */
 async function verifyOTP(data) {
   const email = data.email.trim().toLowerCase();
   const { otp } = data;
@@ -90,7 +77,6 @@ async function verifyOTP(data) {
     throw createError("Invalid OTP.", 400);
   }
 
-  // Double-check nobody else registered with this email while the OTP was pending.
   const alreadyExists = await User.findOne({ email });
   if (alreadyExists) {
     await OTP.deleteOne({ _id: otpRecord._id });
@@ -102,7 +88,7 @@ async function verifyOTP(data) {
   const newUser = await User.create({
     username,
     email,
-    password, // hashed automatically by the User model's pre-save hook
+    password,
     phone,
     isVerified: true,
   });
@@ -222,6 +208,83 @@ function formatUserResponse(user) {
   };
 }
 
+// Haidy: Get Profile endpoint logic
+async function getProfile(userId) {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw createError("User not found", 404);
+  }
+  return { user: formatFullProfile(user) };
+}
+
+// Haidy: Update Profile endpoint logic
+async function updateProfile(userId, data) {
+  const { username, phone, avatar } = data;
+
+  if (username) {
+    const existingUsername = await User.findOne({
+      username,
+      _id: { $ne: userId },
+    });
+    if (existingUsername) {
+      throw createError("Username is already taken", 409);
+    }
+  }
+
+  const updateFields = {};
+  if (username !== undefined) updateFields.username = username;
+  if (phone !== undefined) updateFields.phone = phone;
+  if (avatar !== undefined) updateFields.avatar = avatar;
+
+  const user = await User.findByIdAndUpdate(userId, updateFields, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!user) {
+    throw createError("User not found", 404);
+  }
+
+  return { user: formatFullProfile(user) };
+}
+
+// Haidy: Change Password endpoint logic (verify current + hash new)
+async function changePassword(userId, data) {
+  const { currentPassword, newPassword } = data;
+
+  const user = await User.findById(userId).select("+password");
+  if (!user) {
+    throw createError("User not found", 404);
+  }
+
+  // verify current password
+  const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+  if (!isCurrentPasswordValid) {
+    throw createError("Current password is incorrect", 401);
+  }
+
+  // pre-save hook in user.model.js hashes it automatically
+  user.password = newPassword;
+  await user.save();
+
+  await tokenService.deleteAllRefreshToken(userId);
+
+  return { message: "Password changed successfully" };
+}
+
+function formatFullProfile(user) {
+  return {
+    id: user._id.toString(),
+    username: user.username,
+    email: user.email,
+    phone: user.phone,
+    avatar: user.avatar,
+    role: user.role,
+    addresses: user.addresses,
+    isVerified: user.isVerified,
+  };
+}
+
 module.exports = {
   register,
   verifyOTP,
@@ -231,4 +294,7 @@ module.exports = {
   refresh,
   forgotPassword,
   resetPassword,
+  getProfile,
+  updateProfile,
+  changePassword,
 };
