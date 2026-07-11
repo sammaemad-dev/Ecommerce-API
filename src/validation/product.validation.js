@@ -1,31 +1,28 @@
 const Joi = require("joi");
 
 const productValidation = Joi.object({
-  name: Joi.string().trim().max(200).required(),
+  name: Joi.string().trim().max(200),
 
-  shortDescription: Joi.string().trim().max(500).required(),
+  shortDescription: Joi.string().trim().max(500),
 
-  description: Joi.string().trim().required(),
+  description: Joi.string().trim(),
 
-  price: Joi.number().min(0).required(),
+  price: Joi.number().min(0),
 
   discountPrice: Joi.number().min(0).max(Joi.ref("price")).default(0),
 
-  stock: Joi.number().integer().min(0).required(),
+  stock: Joi.number().integer().min(0),
 
   sku: Joi.string().trim().optional(),
 
-  images: Joi.array()
-    .items(
-      Joi.object({
-        public_id: Joi.string().required(),
-        url: Joi.string().required(),
-      }),
-    )
-    .min(1)
-    .required(),
+  images: Joi.array().items(
+    Joi.object({
+      public_id: Joi.string().required(),
+      url: Joi.string().required(),
+    }),
+  ),
 
-  category: Joi.string().trim().lowercase().required(),
+  category: Joi.string().trim().lowercase(),
 
   subcategory: Joi.string().trim().lowercase().optional(),
 
@@ -37,7 +34,7 @@ const productValidation = Joi.object({
 
   isActive: Joi.boolean().default(true),
 
-  createdBy: Joi.string().hex().length(24).required(),
+  createdBy: Joi.string().hex().length(24),
 });
 
 module.exports = productValidation;
