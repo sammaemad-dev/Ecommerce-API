@@ -66,12 +66,27 @@ const forgotPasswordValidation = Joi.object({
 });
 
 const resetPasswordValidation = Joi.object({
-  token: Joi.string().trim().required(),
+  email: Joi.string().trim().lowercase().email().required(),
+
+  otp: Joi.string().trim().length(6).pattern(/^\d+$/).required().messages({
+    "string.pattern.base": "OTP must contain only digits",
+  }),
 
   password: Joi.string()
     .min(8)
     .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
-    .required(),
+    .required()
+    .messages({
+      "string.pattern.base":
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
+    }),
+
+  confirmPassword: Joi.string()
+    .valid(Joi.ref("password"))
+    .required()
+    .messages({
+      "any.only": "Passwords do not match.",
+    }),
 });
 
 module.exports = {

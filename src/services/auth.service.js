@@ -147,20 +147,13 @@ async function forgotPassword(data) {
     });
     await otpRecord.save();
 
-    const resetToken = await tokenService.generateResetToken(user);
-    const hashedResetToken = await bcrypt.hash(resetToken.resetToken, 10);
-    user.resetPasswordToken = hashedResetToken;
-    user.resetPasswordExpire =
-      Date.now() * Number(resetToken.RESET_TOKEN_EXPIRY) * 60 * 1000;
-    user.save();
-
     await sendEmail({
       to: email,
       subject: "Password Reset Request",
       text: `Your verification code is ${otp}. It expires in ${OTP_EXPIRY_MINUTES} minutes.`,
     });
 
-    return resetToken.resetToken;
+    return { email };
   } catch (e) {
     throw createError(`${e.message}`, e.statusCode);
   }
@@ -168,25 +161,31 @@ async function forgotPassword(data) {
 
 async function resetPassword(data) {
   try {
-    const token = data.token.trim();
-    const newPassword = data.newPassword.trim();
-    const confirmPassword = data.confirmPassword.trim();
-    if (newPassword !== confirmPassword)
-      createError("Confirm Password Mismatched", 400);
+    const email = data.email.trim().toLowerCase();
+    const { otp, password } = data;
 
-    const resetPasswordToken = await bcrypt.hash(token, 10);
+    const otpRecord = await OTP.findOne({ email });
+    if (!otpRecord) {
+      throw createError("OTP not found or already used. Please request a new one.", 400);
+    }
 
-    const user = await User.findOne({
-      resetPasswordToken,
-      resetPasswordExpire: { $gt: Date.now() },
-    });
+    if (otpRecord.expiresAt < new Date()) {
+      await OTP.deleteOne({ _id: otpRecord._id });
+      throw createError("OTP has expired. Please request a new one.", 400);
+    }
 
-    if (!user) throw createError("Token is invalid or has expired.", 400);
+    const isOtpValid = await bcrypt.compare(otp, otpRecord.otp);
+    if (!isOtpValid) {
+      throw createError("Invalid OTP.", 400);
+    }
 
-    user.password = newPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
+    const user = await User.findOne({ email });
+    if (!user) throw createError("User not found.", 404);
+
+    user.password = password;
     await user.save();
+
+    await OTP.deleteOne({ _id: otpRecord._id });
   } catch (e) {
     throw createError(`${e.message}`, e.statusCode);
   }

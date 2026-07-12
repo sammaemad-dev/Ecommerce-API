@@ -26,6 +26,12 @@ const {
 
 const router = require("express").Router();
 
+
+router.get("/checkAuthHealth", authMiddleware, (req, res) => {
+  res.json({ message: "Auth Health is good" });
+});
+
+
 router.post("/register", validate(registerValidation), register);
 router.post("/login", validate(loginValidation), login);
 router.post("/verifyOTP", validate(verifyOTPValidation), verifyOTP);
