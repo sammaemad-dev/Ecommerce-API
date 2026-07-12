@@ -1,0 +1,188 @@
+### APIs end points docs
+
+# 1 - Check live server
+method : GET
+url : http://localhost:3000/
+
+header : none
+Body : none
+
+note : just to check if the server is up. returns "Test the server is live"
+
+# 2 - Register
+method : POST
+url : http://localhost:3000/api/auth/register
+
+header : Content-Type: application/json
+Body :
+{
+  "username": "username",
+  "email": "[EMAIL_ADDRESS]",
+  "password": "Password123!",
+  "phone": "01012345678"
+}
+
+note : password needs 1 uppercase, 1 lowercase, 1 number, 1 special char and min 8 chars.
+
+# 3 - Verify OTP
+method : POST
+url : http://localhost:3000/api/auth/verifyOTP
+
+header : Content-Type: application/json
+Body :
+{
+  "email": "[EMAIL_ADDRESS]",
+  "otp": "123456"
+}
+
+note : verify the code sent to your email to activate the account.
+
+# 4 - Login
+method : POST
+url : http://localhost:3000/api/auth/login
+
+header : Content-Type: application/json
+Body :
+{
+  "email": "[EMAIL_ADDRESS]",
+  "password": "Password123!"
+}
+
+note : returns accessToken. also sets refreshToken in cookies.
+
+# 5 - Check Auth Health
+method : GET
+url : http://localhost:3000/api/auth/checkAuthHealth
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : check if you are logged in correctly.
+
+# 6 - Get Profile
+method : GET
+url : http://localhost:3000/api/auth/profile
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : gets user profile data.
+
+# 7 - Update Profile
+method : PUT
+url : http://localhost:3000/api/auth/profile
+
+header : Authorization: Bearer <token>, Content-Type: application/json
+Body :
+{
+  "username": "username",
+  "phone": "01012345678"
+}
+
+note : update user username or phone. you must send at least one field.
+
+# 8 - Change Password
+method : PUT
+url : http://localhost:3000/api/auth/change-password
+
+header : Authorization: Bearer <token>, Content-Type: application/json
+Body :
+{
+  "currentPassword": "Password123!",
+  "newPassword": "NewPassword123!"
+}
+
+note : changes password. new password must be different.
+
+# 9 - Forgot Password
+method : POST
+url : http://localhost:3000/api/auth/forgotPassword
+
+header : Content-Type: application/json
+Body :
+{
+  "email": "[EMAIL_ADDRESS]"
+}
+
+note : sends reset password otp code to email.
+
+# 10 - Reset Password
+method : POST
+url : http://localhost:3000/api/auth/resetPassword
+
+header : Content-Type: application/json
+Body :
+{
+  "email": "[EMAIL_ADDRESS]",
+  "otp": "123456",
+  "password": "NewPassword123!",
+  "confirmPassword": "NewPassword123!"
+}
+
+note : resets the password if otp is correct and passwords match.
+
+# 11 - Logout
+method : POST
+url : http://localhost:3000/api/auth/logout
+
+header : none
+Body : none
+
+note : clears refresh token cookie.
+
+# 12 - Get All Products
+method : GET
+url : http://localhost:3000/api/products
+
+header : none
+Body : none
+
+note : gets all products from database.
+
+# 13 - Get Product by ID
+method : GET
+url : http://localhost:3000/api/products/[PRODUCT_ID]
+
+header : none
+Body : none
+
+note : gets a single product's details using its ID.
+
+# 14 - Create Product
+method : POST
+url : http://localhost:3000/api/products
+
+header : Authorization: Bearer <token>, Content-Type: multipart/form-data
+Body :
+form-data:
+- name: "T-Shirt"
+- shortDescription: "a nice cotton shirt"
+- description: "more details about this shirt..."
+- price: 150
+- stock: 50
+- category: "fashion"
+- images: [select files to upload]
+
+note : creates a new product. requires login. you can upload up to 5 images.
+
+# 15 - Update Product
+method : PUT
+url : http://localhost:3000/api/products/[PRODUCT_ID]
+
+header : Authorization: Bearer <token>, Content-Type: multipart/form-data
+Body :
+form-data:
+- name: "Updated T-Shirt name"
+- price: 175
+- stock: 40
+
+note : updates a product using its ID. requires login. you can send only the fields you want to change.
+
+# 16 - Delete Product
+method : DELETE
+url : http://localhost:3000/api/products/[PRODUCT_ID]
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : deletes a product. requires login.
