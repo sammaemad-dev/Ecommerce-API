@@ -9,9 +9,9 @@ const productValidation = require("../validation/product.validation");
 
 router.post(
   "/",
-  // authMiddleware,
+  authMiddleware,
   upload.array("images", 5),
-  // validate(productValidation),
+  validate(productValidation),
   productController.createProduct,
 );
 

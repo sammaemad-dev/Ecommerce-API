@@ -1,4 +1,5 @@
 const Product = require("../models/product.model");
+const ApiFeatures = require("../utils/apiFeatures");
 const { uploadToCloudinary, deleteFromCloudinary } = require("../utils/cloudinaryUtils");
 
 function createError(message, statusCode) {
@@ -44,7 +45,7 @@ async function getAllProducts(query) {
   .filter()
   .sort()
   .limitFields()
-  .search("name")
+  .search(["name"])
   .pagination(productCount);
 
   const products = await features.mongooseQuery;
