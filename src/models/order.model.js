@@ -203,7 +203,7 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
-orderSchema.pre("validate", function (next) {
+orderSchema.pre("validate", function () {
   this.subtotal = this.items.reduce(function (total, item) {
     return total + item.price * item.quantity;
   }, 0);
@@ -217,8 +217,6 @@ orderSchema.pre("validate", function (next) {
     this.shippingFee +
     this.tax -
     this.discount;
-
-  next();
 });
 
 module.exports = mongoose.model("Order", orderSchema);
