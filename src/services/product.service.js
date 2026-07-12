@@ -38,8 +38,21 @@ async function createProduct(data, files, userId) {
   return product;
 }
 
-async function getAllProducts() {
-  return Product.find({ isActive: true }).sort({ createdAt: -1 });
+async function getAllProducts(query) {
+  const productCount = await Product.countDocuments({ isActive: true });
+  const features = new ApiFeatures(Product.find({ isActive: true }), query)
+  .filter()
+  .sort()
+  .limitFields()
+  .search("name")
+  .pagination(productCount);
+
+  const products = await features.mongooseQuery;
+  return {
+    results: products.length,
+    pagination: features.paginationResult,
+    data: products,
+  };
 }
 
 async function getProductById(productId) {
