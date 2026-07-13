@@ -1,5 +1,6 @@
 const Cart = require("../models/Cart.model");
 const Product = require("../models/product.model");
+const { findValidCoupon } = require("./coupon.service");
 
 function createError(message, statusCode) {
   const err = new Error(message);
@@ -96,15 +97,24 @@ async function removeItem(userId, productId) {
   return cart;
 }
 
-async function applyCoupon(userId, code, discountType, discountValue) {
+async function applyCoupon(userId, code) {
   const cart = await findOrCreateCart(userId);
-  if (cart.coupon.code !== null)
-    throw createError("Coupon Already Applied", 400);
+  if (cart.items.length === 0) {
+    throw createError("cart is empty", 400);
+  }
+  if (cart.coupon.code) throw createError("Coupon Already Applied", 400);
+
+  const coupon = await findValidCoupon(code);
+
+  if (cart.subtotal < coupon.minOrderAmount) {
+    throw createError(`Minimum order amount is ${coupon.minOrderAmount}`, 400);
+  }
 
   cart.coupon = {
-    code,
-    discountType,
-    discountValue,
+    code: coupon.code,
+    discountType: coupon.discountType,
+    discountValue: coupon.discountValue,
+    maxDiscount: coupon.maxDiscount,
   };
 
   await cart.save();
@@ -114,11 +124,12 @@ async function applyCoupon(userId, code, discountType, discountValue) {
 
 async function removeCoupon(userId) {
   const cart = await findOrCreateCart(userId);
-  if (cart.coupon.code === null) throw createError("No Coupon Found", 400);
+  if (!cart.coupon.code) throw createError("No Coupon applied", 400);
   cart.coupon = {
     code: null,
     discountType: null,
     discountValue: 0,
+    maxDiscount: null,
   };
 
   await cart.save();
@@ -140,6 +151,7 @@ async function clearCart(userId) {
     code: null,
     discountType: null,
     discountValue: 0,
+    maxDiscount: null,
   };
   await cart.save();
 
