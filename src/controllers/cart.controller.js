@@ -2,7 +2,7 @@ const asyncHandler = require("express-async-handler");
 const cartServices = require("../services/cart.services");
 
 const getCart = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+  const userId = req.user._id;
   const cart = cartServices.getCart(userId);
   res.status(200).json({
     success: true,
@@ -12,8 +12,8 @@ const getCart = asyncHandler(async (req, res) => {
 });
 
 const addItem = asyncHandler(async (req, res) => {
-  const { userId, productId } = req.params;
-  const { quantity } = req.body;
+  const userId = req.user._id;
+  const { productId, quantity } = req.body;
 
   const cart = cartServices.addItem(userId, productId, quantity);
 
@@ -25,8 +25,8 @@ const addItem = asyncHandler(async (req, res) => {
 });
 
 const updateItemQuantity = asyncHandler(async (req, res) => {
-  const { userId, productId } = req.params;
-  const { quantity } = req.body;
+  const userId = req.user._id;
+  const { productId, quantity } = req.body;
 
   const cart = cartServices.updateItemQuantity(userId, productId, quantity);
 
@@ -38,7 +38,8 @@ const updateItemQuantity = asyncHandler(async (req, res) => {
 });
 
 const removeItem = asyncHandler((req, res) => {
-  const { userId, productId } = req.params;
+  const { productId } = req.params;
+  const userId = req.user_.id;
   const cart = cartServices.removeItem(userId, productId);
 
   res.status(200).json({
@@ -49,7 +50,7 @@ const removeItem = asyncHandler((req, res) => {
 });
 
 const applyCoupon = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+  const userId = req.user._id;
   const { code, discountType, discountValue } = req.body;
   const cart = cartServices.applyCoupon(
     userId,
@@ -65,7 +66,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
 });
 
 const removeCoupon = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+  const userId = req.user._id;
   const cart = cartServices.removeCoupon(userId);
   res.status(200).json({
     success: true,
@@ -75,7 +76,7 @@ const removeCoupon = asyncHandler(async (req, res) => {
 });
 
 const clearCart = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+  const userId = req.user._id;
   const cart = cartServices.removeCoupon(userId);
 
   res.status(200).json({
@@ -85,7 +86,7 @@ const clearCart = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = [
+module.exports = {
   getCart,
   addItem,
   updateItemQuantity,
@@ -93,4 +94,4 @@ module.exports = [
   applyCoupon,
   removeCoupon,
   clearCart,
-];
+};
