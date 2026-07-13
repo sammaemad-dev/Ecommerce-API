@@ -7,7 +7,7 @@ const getCart = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Cart retrieved successfully",
-    cart,
+    data: cart,
   });
 });
 
@@ -20,7 +20,7 @@ const addItem = asyncHandler(async (req, res) => {
   res.status(201).json({
     success: true,
     message: "Item added successfully",
-    cart,
+    data: cart,
   });
 });
 
@@ -28,16 +28,20 @@ const updateItemQuantity = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
   const { productId, quantity } = req.body;
 
-  const cart = await cartServices.updateItemQuantity(userId, productId, quantity);
+  const cart = await cartServices.updateItemQuantity(
+    userId,
+    productId,
+    quantity,
+  );
 
   res.status(200).json({
     success: true,
     message: "Quantity updated successfully",
-    cart,
+    data: cart,
   });
 });
 
-const removeItem = asyncHandler((req, res) => {
+const removeItem = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const userId = req.user?._id;
   const cart = await cartServices.removeItem(userId, productId);
@@ -45,7 +49,7 @@ const removeItem = asyncHandler((req, res) => {
   res.status(200).json({
     success: true,
     message: "Item removed successfully",
-    cart,
+    data: cart,
   });
 });
 
@@ -61,7 +65,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Coupon applied successfully",
-    cart,
+    data: cart,
   });
 });
 
@@ -71,7 +75,7 @@ const removeCoupon = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Coupon removed successfully",
-    cart,
+    data: cart,
   });
 });
 
@@ -82,7 +86,7 @@ const clearCart = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Cart cleared successfully",
-    cart,
+    data: cart,
   });
 });
 
