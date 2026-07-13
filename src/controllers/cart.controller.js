@@ -3,7 +3,7 @@ const cartServices = require("../services/cart.services");
 
 const getCart = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
-  const cart = cartServices.getCart(userId);
+  const cart = await cartServices.getCart(userId);
   res.status(200).json({
     success: true,
     message: "Cart retrieved successfully",
@@ -15,7 +15,7 @@ const addItem = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
   const { productId, quantity } = req.body;
 
-  const cart = cartServices.addItem(userId, productId, quantity);
+  const cart = await cartServices.addItem(userId, productId, quantity);
 
   res.status(201).json({
     success: true,
@@ -28,7 +28,7 @@ const updateItemQuantity = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
   const { productId, quantity } = req.body;
 
-  const cart = cartServices.updateItemQuantity(userId, productId, quantity);
+  const cart = await cartServices.updateItemQuantity(userId, productId, quantity);
 
   res.status(200).json({
     success: true,
@@ -40,7 +40,7 @@ const updateItemQuantity = asyncHandler(async (req, res) => {
 const removeItem = asyncHandler((req, res) => {
   const { productId } = req.params;
   const userId = req.user?._id;
-  const cart = cartServices.removeItem(userId, productId);
+  const cart = await cartServices.removeItem(userId, productId);
 
   res.status(200).json({
     success: true,
@@ -52,7 +52,7 @@ const removeItem = asyncHandler((req, res) => {
 const applyCoupon = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
   const { code, discountType, discountValue } = req.body;
-  const cart = cartServices.applyCoupon(
+  const cart = await cartServices.applyCoupon(
     userId,
     code,
     discountType,
@@ -67,7 +67,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
 
 const removeCoupon = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
-  const cart = cartServices.removeCoupon(userId);
+  const cart = await cartServices.removeCoupon(userId);
   res.status(200).json({
     success: true,
     message: "Coupon removed successfully",
@@ -77,7 +77,7 @@ const removeCoupon = asyncHandler(async (req, res) => {
 
 const clearCart = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
-  const cart = cartServices.removeCoupon(userId);
+  const cart = await cartServices.clearCart(userId);
 
   res.status(200).json({
     success: true,

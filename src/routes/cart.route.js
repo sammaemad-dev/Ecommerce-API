@@ -8,7 +8,7 @@ router.use(authMiddleware);
 router
   .get("/", cartController.getCart)
   .post("/items", cartController.addItem)
-  .put("/items", cartController.updateItemQuantity)
+  .patch("/items", cartController.updateItemQuantity)
   .delete("/items/:productId", cartController.removeItem)
   .post("/coupon", cartController.applyCoupon)
   .delete("/coupon", cartController.removeCoupon)
