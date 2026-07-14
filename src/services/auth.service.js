@@ -3,7 +3,7 @@ const OTP = require("../models/OTP.model");
 const tokenService = require("./token.service");
 const generateOTP = require("../utils/generateOTP");
 const sendEmail = require("../utils/sendEmail");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 const OTP_EXPIRY_MINUTES = 10;
 
