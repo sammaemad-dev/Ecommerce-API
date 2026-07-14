@@ -149,7 +149,7 @@ const productSchema = new mongoose.Schema(
 
 //To generate slug automatically  => use pre hook
 
-productSchema.pre("save", function (next) {
+productSchema.pre("save", function () {
   if (this.isModified("name")) {
     //this = current product document
     this.slug = slugify(this.name, {
@@ -157,8 +157,6 @@ productSchema.pre("save", function (next) {
       strict: true, //remove special characters like !, ?, &, '
     });
   }
-
-  next(); //middleware is done => now save
 });
 
 //To calculate average rating

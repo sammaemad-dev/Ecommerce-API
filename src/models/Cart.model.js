@@ -26,7 +26,7 @@ const cartItemSchema = new mongoose.Schema(
       default: 1,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const cartSchema = new mongoose.Schema(
@@ -56,13 +56,17 @@ const cartSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
+      maxDiscount: {
+        type: Number,
+        default: null,
+      },
     },
   },
   {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 cartSchema.virtual("subtotal").get(function () {
@@ -79,7 +83,11 @@ cartSchema.virtual("discountAmount").get(function () {
   const subtotal = this.subtotal;
 
   if (this.coupon.discountType === "percentage") {
-    return (subtotal * this.coupon.discountValue) / 100;
+    const discount = (subtotal * this.coupon.discountValue) / 100;
+    if (this.coupon.maxDiscount !== null) {
+      return Math.min(discount, this.coupon.maxDiscount);
+    }
+    return discount;
   }
 
   if (this.coupon.discountType === "fixed") {
