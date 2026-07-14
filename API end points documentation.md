@@ -186,3 +186,77 @@ header : Authorization: Bearer <token>
 Body : none
 
 note : deletes a product. requires login.
+
+# 17 - Get Cart
+method : GET
+url : http://localhost:3000/api/carts
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : gets the current user's cart with all items and total price.
+
+# 18 - Add Item to Cart
+method : POST
+url : http://localhost:3000/api/carts/items
+
+header : Authorization: Bearer <token>, Content-Type: application/json
+Body :
+{
+  "productId": "[PRODUCT_ID]",
+  "quantity": 2
+}
+
+note : adds a product to the cart. quantity is optional, defaults to 1.
+
+# 19 - Update Item Quantity
+method : PATCH
+url : http://localhost:3000/api/carts/items
+
+header : Authorization: Bearer <token>, Content-Type: application/json
+Body :
+{
+  "productId": "[PRODUCT_ID]",
+  "quantity": 5
+}
+
+note : updates the quantity of an existing item in the cart.
+
+# 20 - Remove Item from Cart
+method : DELETE
+url : http://localhost:3000/api/carts/items/[PRODUCT_ID]
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : removes a single item from the cart using its product ID.
+
+# 21 - Apply Coupon
+method : POST
+url : http://localhost:3000/api/carts/coupon
+
+header : Authorization: Bearer <token>, Content-Type: application/json
+Body :
+{
+  "code": "SAVE10"
+}
+
+note : applies a coupon code to the cart.
+
+# 22 - Remove Coupon
+method : DELETE
+url : http://localhost:3000/api/carts/coupon
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : removes the applied coupon from the cart.
+
+# 23 - Clear Cart
+method : DELETE
+url : http://localhost:3000/api/carts/clear
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : removes all items from the cart.

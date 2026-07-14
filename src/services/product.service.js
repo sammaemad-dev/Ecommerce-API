@@ -100,7 +100,11 @@ async function updateProduct(productId, data, files) {
     const oldImages = product.images || [];
     for (const image of oldImages) {
       if (image?.public_id) {
-        await deleteFromCloudinary(image.public_id);
+        try {
+          await deleteFromCloudinary(image.public_id);
+        } catch (err) {
+          console.warn(`Could not delete old image ${image.public_id} from Cloudinary:`, err.message);
+        }
       }
     }
   }
@@ -118,7 +122,11 @@ async function deleteProduct(productId) {
 
   for (const image of product.images || []) {
     if (image?.public_id) {
-      await deleteFromCloudinary(image.public_id);
+      try {
+        await deleteFromCloudinary(image.public_id);
+      } catch (err) {
+        console.warn(`Could not delete image ${image.public_id} from Cloudinary:`, err.message);
+      }
     }
   }
 
