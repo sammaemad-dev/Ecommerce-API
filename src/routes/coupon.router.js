@@ -1,6 +1,9 @@
 const express = require("express");
 const couponController = require("../controllers/coupon.controller");
 const validate = require("../middlewares/validate.middleware");
+const { authMiddleware } = require("../middlewares/authMiddleware");
+// Haidy: coupon management is an admin-only resource
+const authorization = require("../middlewares/authorization");
 const {
   createCouponValidation,
   updateCouponValidation,
@@ -8,6 +11,9 @@ const {
 } = require("../validation/coupon.validation");
 
 const router = express.Router();
+
+// Haidy: protect every coupon route below, must be logged in AND an admin
+router.use(authMiddleware, authorization("admin"));
 
 router.post(
   "/",

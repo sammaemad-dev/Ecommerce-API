@@ -1,4 +1,6 @@
 const tokenService = require('../services/token.service');
+// Haidy: need the user's role so the authorization() admin guard can check it
+const User = require('../models/user.model');
 
 const authMiddleware = async (req, res, next) => {
     const reqToken = req.header('Authorization')?.replace('Bearer ', '');
@@ -8,7 +10,15 @@ const authMiddleware = async (req, res, next) => {
     }
     try {
         const decodedToken = await tokenService.verifyAccessToken(reqToken)
-        req.user = { _id: decodedToken.userId }
+
+        // Haidy: fetch the user's role from the DB (JWT payload only has the id),
+        // this is what lets admin-only routes work correctly
+        const user = await User.findById(decodedToken.userId).select('_id role')
+        if (!user) {
+            return res.status(401).json({ error: "User not found" })
+        }
+
+        req.user = { _id: user._id, role: user.role }
         next()
     } catch (e) {
         return res.status(401).json({ error: "Invalid or expired token" })
