@@ -260,3 +260,107 @@ header : Authorization: Bearer <token>
 Body : none
 
 note : removes all items from the cart.
+
+---------------------------------------------------
+# WISHLIST ENDPOINTS
+---------------------------------------------------
+
+# 24 - Get Wishlist
+method : GET
+url : http://localhost:3000/api/wishlist
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : returns all saved products in the user's wishlist.
+
+# 25 - Add Product to Wishlist
+method : POST
+url : http://localhost:3000/api/wishlist
+
+header : Authorization: Bearer <token>, Content-Type: application/json
+Body :
+{
+  "productId": "[PRODUCT_ID]"
+}
+
+note : saves a product to the wishlist. if it is already there it will not be added twice.
+
+# 26 - Remove Product from Wishlist
+method : DELETE
+url : http://localhost:3000/api/wishlist/[PRODUCT_ID]
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : removes a single product from the wishlist using its product ID.
+
+# 27 - Clear Wishlist
+method : DELETE
+url : http://localhost:3000/api/wishlist
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : removes all products from the wishlist.
+
+---------------------------------------------------
+# COUPON ENDPOINTS  (admin only)
+---------------------------------------------------
+
+# 28 - Create Coupon
+method : POST
+url : http://localhost:3000/api/coupons
+
+header : Authorization: Bearer <token>, Content-Type: application/json
+Body :
+{
+  "code": "SAVE10",
+  "discountType": "percentage",
+  "discountValue": 10,
+  "minOrderAmount": 100,
+  "expiresAt": "2027-12-31T00:00:00.000Z",
+  "isActive": true
+}
+
+note : creates a new coupon. discountType is "percentage" or "fixed". requires admin role.
+
+# 29 - Get All Coupons
+method : GET
+url : http://localhost:3000/api/coupons
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : returns all coupons. requires admin role.
+
+# 30 - Get Coupon by ID
+method : GET
+url : http://localhost:3000/api/coupons/[COUPON_ID]
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : returns a single coupon by its ID. requires admin role.
+
+# 31 - Update Coupon
+method : PATCH
+url : http://localhost:3000/api/coupons/[COUPON_ID]
+
+header : Authorization: Bearer <token>, Content-Type: application/json
+Body :
+{
+  "discountValue": 20,
+  "isActive": false
+}
+
+note : updates any field of a coupon. send only the fields you want to change. requires admin role.
+
+# 32 - Delete Coupon
+method : DELETE
+url : http://localhost:3000/api/coupons/[COUPON_ID]
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : permanently deletes a coupon. requires admin role.
