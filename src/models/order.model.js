@@ -204,19 +204,22 @@ const orderSchema = new mongoose.Schema(
 );
 
 orderSchema.pre("validate", function () {
+  // Calculate the subtotal
   this.subtotal = this.items.reduce(function (total, item) {
     return total + item.price * item.quantity;
   }, 0);
 
+  // Determine shipping fee
   this.shippingFee = this.subtotal >= 1000 ? 0 : 50;
 
+  // Calculate 14% VAT (tax) and round it to 2 decimal
   this.tax = Number((this.subtotal * 0.14).toFixed(2));
 
-  this.totalPrice =
-    this.subtotal +
-    this.shippingFee +
-    this.tax -
-    this.discount;
+  // preliminary total price
+  const calculatedTotal = this.subtotal + this.shippingFee + this.tax - this.discount;
+
+  // Ensure the final totalPrice is rounded to 2 decimal places and never drops below 0
+  this.totalPrice = calculatedTotal > 0 ? Number(calculatedTotal.toFixed(2)) : 0;
 });
 
 module.exports = mongoose.model("Order", orderSchema);
