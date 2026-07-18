@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const orderService = require("../services/order.service");
+const paymentService = require("../services/payment.service");
 
 const createOrder = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
@@ -43,8 +44,43 @@ const payOrderWithCash = asyncHandler(async (req, res) => {
   });
 });
 
+const createStripeCheckoutSession = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { orderId, successUrl, cancelUrl } = req.validatedData;
+
+  const payment = await paymentService.createStripeCheckoutSession(userId, orderId, {
+    successUrl,
+    cancelUrl,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Stripe checkout session created successfully.",
+    data: payment,
+  });
+});
+
+const verifyStripeCheckoutSession = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { orderId, sessionId } = req.validatedData;
+
+  const result = await paymentService.verifyStripeCheckoutSession(
+    userId,
+    orderId,
+    sessionId
+  );
+
+  res.status(200).json({
+    success: true,
+    message: "Stripe checkout payment verified successfully.",
+    data: result,
+  });
+});
+
 module.exports = {
   createOrder,
   getUserOrders,
   payOrderWithCash,
+  createStripeCheckoutSession,
+  verifyStripeCheckoutSession,
 };
