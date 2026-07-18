@@ -8,11 +8,13 @@ const productRoutes = require("./product.route");
 const cartRoutes = require("./cart.route");
 const wishlistRoutes = require("./wishlist.route");
 const couponRoutes = require("./coupon.router");
+const orderRoutes = require("./order.route");
 
 router.use("/auth", authRoutes);
 router.use("/products", productRoutes);
 router.use("/carts", cartRoutes);
 router.use("/wishlist", wishlistRoutes);
 router.use("/coupons", couponRoutes);
+router.use("/orders", orderRoutes);
 
 module.exports = router;
