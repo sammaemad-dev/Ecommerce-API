@@ -364,3 +364,49 @@ header : Authorization: Bearer <token>
 Body : none
 
 note : permanently deletes a coupon. requires admin role.
+
+---------------------------------------------------
+# ORDER ENDPOINTS
+---------------------------------------------------
+
+# 33 - Place Order
+method : POST
+url : http://localhost:3000/api/orders
+
+header : Authorization: Bearer <token>, Content-Type: application/json
+Body :
+{
+  "shippingAddress": {
+    "fullName": "John Doe",
+    "phone": "01012345678",
+    "country": "Egypt",
+    "city": "Cairo",
+    "address": "123 Tahrir Street",
+    "postalCode": "11511"
+  },
+  "paymentMethod": "cash",
+  "customerNote": "Please call before delivery"
+}
+
+note : places a new order from the items currently in the user's cart. paymentMethod options are: cash, stripe, paypal, paymob. cart must not be empty. stock is checked and reduced automatically.
+
+# 34 - Get My Orders
+method : GET
+url : http://localhost:3000/api/orders
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : returns all orders placed by the logged-in user, sorted from newest to oldest.
+
+# 35 - Pay Order with Cash
+method : POST
+url : http://localhost:3000/api/orders/[ORDER_ID]/pay/cash
+
+header : Authorization: Bearer <token>, Content-Type: application/json
+Body :
+{
+  "orderId": "[ORDER_ID]"
+}
+
+note : marks a cash order as paid and confirms it. only works if the order paymentMethod is "cash" and it has not been paid yet.
