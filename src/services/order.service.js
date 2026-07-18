@@ -65,7 +65,45 @@ const getUserOrders = async (userId) => {
   return await Order.find({ user: userId }).sort({ createdAt: -1 });
 };
 
+// Process cash payment for an existing order
+const payOrderWithCash = async (userId, orderId) => {
+  const order = await Order.findOne({ _id: orderId, user: userId });
+
+  if (!order) {
+    const error = new Error("Order not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (order.paymentMethod !== "cash") {
+    const error = new Error("This order is not configured for cash payment.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (order.paymentStatus === "paid") {
+    const error = new Error("This order has already been paid.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (["cancelled", "returned"].includes(order.status)) {
+    const error = new Error("This order cannot be paid because it is no longer active.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  order.paymentStatus = "paid";
+  order.status = "confirmed";
+  order.paidAt = new Date();
+
+  await order.save();
+
+  return order;
+};
+
 module.exports = {
   createOrder,
   getUserOrders,
+  payOrderWithCash,
 };
