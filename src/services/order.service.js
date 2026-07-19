@@ -1,9 +1,13 @@
 const Order = require("../models/order.model");
 const Cart = require("../models/Cart.model");
 const Product = require("../models/product.model");
+const inventoryService = require("./inventory.service");
 
 // Create a new order from active cart
-const createOrder = async (userId, { shippingAddress, paymentMethod, customerNote }) => {
+const createOrder = async (
+  userId,
+  { shippingAddress, paymentMethod, customerNote },
+) => {
   // Fetch the user's active cart
   const cart = await Cart.findOne({ user: userId });
   if (!cart || cart.items.length === 0) {
@@ -16,7 +20,9 @@ const createOrder = async (userId, { shippingAddress, paymentMethod, customerNot
   for (const item of cart.items) {
     const product = await Product.findById(item.product);
     if (!product || !product.isActive) {
-      const error = new Error(`The product "${item.name}" is no longer available.`);
+      const error = new Error(
+        `The product "${item.name}" is no longer available.`,
+      );
       error.statusCode = 404;
       throw error;
     }
@@ -30,7 +36,7 @@ const createOrder = async (userId, { shippingAddress, paymentMethod, customerNot
   // Create the order
   const order = await Order.create({
     user: userId,
-    items: cart.items.map(item => ({
+    items: cart.items.map((item) => ({
       product: item.product,
       name: item.name,
       image: item.image,
@@ -43,8 +49,12 @@ const createOrder = async (userId, { shippingAddress, paymentMethod, customerNot
     customerNote,
   });
 
+  for (const item of order.items) {
+    await inventoryService.deductStock(item.product, item.quantity);
+  }
+
   // Update inventory in bulk
-  const bulkOps = cart.items.map(item => ({
+  const bulkOps = cart.items.map((item) => ({
     updateOne: {
       filter: { _id: item.product },
       update: { $inc: { stock: -item.quantity } },
@@ -54,7 +64,12 @@ const createOrder = async (userId, { shippingAddress, paymentMethod, customerNot
 
   // Clear the user's cart
   cart.items = [];
-  cart.coupon = { code: null, discountType: null, discountValue: 0, maxDiscount: null };
+  cart.coupon = {
+    code: null,
+    discountType: null,
+    discountValue: 0,
+    maxDiscount: null,
+  };
   await cart.save();
 
   return order;
@@ -88,7 +103,9 @@ const payOrderWithCash = async (userId, orderId) => {
   }
 
   if (["cancelled", "returned"].includes(order.status)) {
-    const error = new Error("This order cannot be paid because it is no longer active.");
+    const error = new Error(
+      "This order cannot be paid because it is no longer active.",
+    );
     error.statusCode = 400;
     throw error;
   }
@@ -102,8 +119,34 @@ const payOrderWithCash = async (userId, orderId) => {
   return order;
 };
 
+async function cancelOrder(userId, orderId) {
+  const order = await Order.findOne({ _id: orderId, user: userId });
+
+  if (!order) {
+    const error = new Error("Order not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (order.status === "cancelled") {
+    const error = new Error("This order has already been cancelled.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  for (const item of order.items) {
+    await inventoryService.restoreStock(item.product, item.quantity);
+  }
+
+  order.status = "cancelled";
+  await order.save();
+
+  return order;
+}
+
 module.exports = {
   createOrder,
   getUserOrders,
   payOrderWithCash,
+  cancelOrder,
 };
