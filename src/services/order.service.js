@@ -53,15 +53,6 @@ const createOrder = async (
     await inventoryService.deductStock(item.product, item.quantity);
   }
 
-  // Update inventory in bulk
-  const bulkOps = cart.items.map((item) => ({
-    updateOne: {
-      filter: { _id: item.product },
-      update: { $inc: { stock: -item.quantity } },
-    },
-  }));
-  await Product.bulkWrite(bulkOps);
-
   // Clear the user's cart
   cart.items = [];
   cart.coupon = {
