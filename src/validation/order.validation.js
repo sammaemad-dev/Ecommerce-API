@@ -47,16 +47,37 @@ const createOrderValidation = Joi.object({
   }),
 });
 
+const orderIdParamValidation = Joi.string().hex().length(24).required().trim().messages({
+  "string.empty": "Order ID is required.",
+  "string.hex": "Order ID must be a valid hexadecimal value.",
+  "string.length": "Order ID must be 24 characters long.",
+  "any.required": "Order ID is required.",
+});
+
 const cashPaymentValidation = Joi.object({
-  orderId: Joi.string().hex().length(24).required().trim().messages({
-    "string.empty": "Order ID is required.",
-    "string.hex": "Order ID must be a valid hexadecimal value.",
-    "string.length": "Order ID must be 24 characters long.",
-    "any.required": "Order ID is required.",
+  orderId: orderIdParamValidation,
+});
+
+const stripeCheckoutValidation = Joi.object({
+  orderId: orderIdParamValidation,
+  successUrl: Joi.string().uri().optional().trim().messages({
+    "string.uri": "Success URL must be a valid URL.",
+  }),
+  cancelUrl: Joi.string().uri().optional().trim().messages({
+    "string.uri": "Cancel URL must be a valid URL.",
+  }),
+});
+
+const stripeVerifyValidation = Joi.object({
+  orderId: orderIdParamValidation,
+  sessionId: Joi.string().pattern(/^cs_/).optional().trim().messages({
+    "string.pattern.base": "Session ID must be a valid Stripe checkout session ID.",
   }),
 });
 
 module.exports = {
   createOrderValidation,
   cashPaymentValidation,
+  stripeCheckoutValidation,
+  stripeVerifyValidation,
 };
