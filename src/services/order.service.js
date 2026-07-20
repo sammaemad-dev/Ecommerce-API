@@ -1,9 +1,12 @@
 const Order = require("../models/order.model");
 const Cart = require("../models/Cart.model");
 const Product = require("../models/product.model");
-
+const { sendOrderConfirmation } = require("./email.services");
 // Create a new order from active cart
-const createOrder = async (userId, { shippingAddress, paymentMethod, customerNote }) => {
+const createOrder = async (
+  userId,
+  { shippingAddress, paymentMethod, customerNote },
+) => {
   // Fetch the user's active cart
   const cart = await Cart.findOne({ user: userId });
   if (!cart || cart.items.length === 0) {
@@ -16,21 +19,23 @@ const createOrder = async (userId, { shippingAddress, paymentMethod, customerNot
   for (const item of cart.items) {
     const product = await Product.findById(item.product);
     if (!product || !product.isActive) {
-      const error = new Error(`The product "${item.name}" is no longer available.`);
+      const error = new Error(
+        `The product "${item.name}" is no longer available.`,
+      );
       error.statusCode = 404;
       throw error;
     }
-    if (product.stock < item.quantity) {
-      const error = new Error(`Insufficient stock for "${item.name}".`);
-      error.statusCode = 400;
-      throw error;
-    }
+    // if (product.stock < item.quantity) {
+    //   const error = new Error(`Insufficient stock for "${item.name}".`);
+    //   error.statusCode = 400;
+    //   throw error;
+    // }
   }
 
   // Create the order
   const order = await Order.create({
     user: userId,
-    items: cart.items.map(item => ({
+    items: cart.items.map((item) => ({
       product: item.product,
       name: item.name,
       image: item.image,
@@ -44,7 +49,7 @@ const createOrder = async (userId, { shippingAddress, paymentMethod, customerNot
   });
 
   // Update inventory in bulk
-  const bulkOps = cart.items.map(item => ({
+  const bulkOps = cart.items.map((item) => ({
     updateOne: {
       filter: { _id: item.product },
       update: { $inc: { stock: -item.quantity } },
@@ -54,9 +59,14 @@ const createOrder = async (userId, { shippingAddress, paymentMethod, customerNot
 
   // Clear the user's cart
   cart.items = [];
-  cart.coupon = { code: null, discountType: null, discountValue: 0, maxDiscount: null };
+  cart.coupon = {
+    code: null,
+    discountType: null,
+    discountValue: 0,
+    maxDiscount: null,
+  };
   await cart.save();
-
+  await sendOrderConfirmation(order);
   return order;
 };
 
@@ -88,7 +98,9 @@ const payOrderWithCash = async (userId, orderId) => {
   }
 
   if (["cancelled", "returned"].includes(order.status)) {
-    const error = new Error("This order cannot be paid because it is no longer active.");
+    const error = new Error(
+      "This order cannot be paid because it is no longer active.",
+    );
     error.statusCode = 400;
     throw error;
   }
