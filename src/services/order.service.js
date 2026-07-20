@@ -1,14 +1,20 @@
 const Order = require("../models/order.model");
 const Cart = require("../models/Cart.model");
 const Product = require("../models/product.model");
+const {
+  sendOrderConfirmation,
+  sendPaymentConfirmation,
+} = require("./email.services");
+
 const inventoryService = require("./inventory.service");
+
 
 // Create a new order from active cart
 const createOrder = async (
   userId,
   { shippingAddress, paymentMethod, customerNote },
 ) => {
-  // Fetch the user's active cart
+  // Fetch the user's achttps://github.com/sammaemad-devtive cart
   const cart = await Cart.findOne({ user: userId });
   if (!cart || cart.items.length === 0) {
     const error = new Error("Your cart is empty.");
@@ -26,11 +32,11 @@ const createOrder = async (
       error.statusCode = 404;
       throw error;
     }
-    if (product.stock < item.quantity) {
-      const error = new Error(`Insufficient stock for "${item.name}".`);
-      error.statusCode = 400;
-      throw error;
-    }
+    // if (product.stock < item.quantity) {
+    //   const error = new Error(`Insufficient stock for "${item.name}".`);
+    //   error.statusCode = 400;
+    //   throw error;
+    // }
   }
 
   // Create the order
@@ -49,9 +55,20 @@ const createOrder = async (
     customerNote,
   });
 
+
+  // Update inventory in bulk
+  const bulkOps = cart.items.map((item) => ({
+    updateOne: {
+      filter: { _id: item.product },
+      update: { $inc: { stock: -item.quantity } },
+    },
+  }));
+  await Product.bulkWrite(bulkOps);
+
   for (const item of order.items) {
     await inventoryService.deductStock(item.product, item.quantity);
   }
+
 
   // Clear the user's cart
   cart.items = [];
@@ -62,7 +79,7 @@ const createOrder = async (
     maxDiscount: null,
   };
   await cart.save();
-
+  await sendOrderConfirmation(order);
   return order;
 };
 
@@ -105,6 +122,7 @@ const payOrderWithCash = async (userId, orderId) => {
   order.status = "confirmed";
   order.paidAt = new Date();
 
+  await sendPaymentConfirmation(order);
   await order.save();
 
   return order;
@@ -139,5 +157,8 @@ module.exports = {
   createOrder,
   getUserOrders,
   payOrderWithCash,
+
+
   cancelOrder,
+
 };
