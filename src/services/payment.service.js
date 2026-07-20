@@ -2,7 +2,7 @@ const getStripeClient = require("../config/stripe");
 const Order = require("../models/order.model");
 const { restoreStock } = require("./inventory.service");
 const { handleStripeError } = require("../utils/stripeErrors");
-
+const { sendPaymentConfirmation } = require("./email.services");
 function getStripeCurrency() {
   return (process.env.STRIPE_CURRENCY || "egp").toLowerCase();
 }
@@ -18,7 +18,9 @@ function getCheckoutUrls({ successUrl, cancelUrl }) {
     "http://localhost:3000/payment/success?session_id={CHECKOUT_SESSION_ID}";
 
   const resolvedCancelUrl =
-    cancelUrl || process.env.STRIPE_CANCEL_URL || "http://localhost:3000/payment/cancel";
+    cancelUrl ||
+    process.env.STRIPE_CANCEL_URL ||
+    "http://localhost:3000/payment/cancel";
 
   return {
     successUrl: resolvedSuccessUrl.includes("{CHECKOUT_SESSION_ID}")
@@ -50,7 +52,9 @@ async function getPayableStripeOrder(userId, orderId) {
   }
 
   if (["cancelled", "returned"].includes(order.status)) {
-    const error = new Error("This order cannot be paid because it is no longer active.");
+    const error = new Error(
+      "This order cannot be paid because it is no longer active.",
+    );
     error.statusCode = 400;
     throw error;
   }
@@ -111,6 +115,7 @@ async function processCheckoutSessionPayment(session, order) {
     }
 
     const paidOrder = await markOrderPaid(order);
+    await sendPaymentConfirmation(paidOrder);
     return {
       order: paidOrder,
       paymentStatus: "paid",
@@ -128,7 +133,9 @@ async function processCheckoutSessionPayment(session, order) {
   }
 
   if (session.status === "expired") {
-    const error = new Error("Checkout session has expired. Create a new checkout session.");
+    const error = new Error(
+      "Checkout session has expired. Create a new checkout session.",
+    );
     error.statusCode = 400;
     error.checkoutSessionStatus = session.status;
     error.checkoutPaymentStatus = session.payment_status;
@@ -143,7 +150,11 @@ async function processCheckoutSessionPayment(session, order) {
   throw error;
 }
 
-async function createStripeCheckoutSession(userId, orderId, { successUrl, cancelUrl } = {}) {
+async function createStripeCheckoutSession(
+  userId,
+  orderId,
+  { successUrl, cancelUrl } = {},
+) {
   const order = await getPayableStripeOrder(userId, orderId);
   const currency = getStripeCurrency();
   const amount = toStripeAmount(order.totalPrice);
@@ -152,7 +163,9 @@ async function createStripeCheckoutSession(userId, orderId, { successUrl, cancel
 
   if (order.transactionId && order.transactionId.startsWith("cs_")) {
     try {
-      const existingSession = await stripe.checkout.sessions.retrieve(order.transactionId);
+      const existingSession = await stripe.checkout.sessions.retrieve(
+        order.transactionId,
+      );
 
       if (existingSession.payment_status === "paid") {
         await markOrderPaid(order);
@@ -224,7 +237,9 @@ async function verifyStripeCheckoutSession(userId, orderId, sessionId) {
   const checkoutSessionId = sessionId || order.transactionId;
 
   if (!checkoutSessionId) {
-    const error = new Error("No checkout session found for this order. Create a checkout session first.");
+    const error = new Error(
+      "No checkout session found for this order. Create a checkout session first.",
+    );
     error.statusCode = 400;
     throw error;
   }
@@ -282,10 +297,12 @@ async function handleStripeWebhook(rawBody, signature) {
     event = stripe.webhooks.constructEvent(
       rawBody,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET
+      process.env.STRIPE_WEBHOOK_SECRET,
     );
   } catch (error) {
-    const webhookError = new Error(`Webhook signature verification failed: ${error.message}`);
+    const webhookError = new Error(
+      `Webhook signature verification failed: ${error.message}`,
+    );
     webhookError.statusCode = 400;
     throw webhookError;
   }

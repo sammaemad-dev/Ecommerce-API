@@ -64,11 +64,11 @@ async function sendPaymentConfirmation(order) {
       
       <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
         <p><strong>Order ID:</strong> ${order.id}</p>
-        <p><strong>Amount Paid:</strong> $${order.totalPrice.toFixed(2)}</p>
+        <p><strong>Amount Paid:</strong> ${order.totalPrice.toFixed(2)}</p>
       </div>
       
       <p>If you have any questions, please contact our support team.</p>
-      <p>Best regards,<br>Your Company Team</p>
+      <p>Best regards,<br>Company Team</p>
     </div>
   `;
 
