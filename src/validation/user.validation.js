@@ -1,14 +1,5 @@
 const Joi = require("joi");
-
-const addressValidation = Joi.object({
-  country: Joi.string().trim().required(),
-
-  city: Joi.string().trim().required(),
-
-  street: Joi.string().trim().required(),
-
-  zipCode: Joi.string().trim().required(),
-});
+const addressValidation = require("./address.validation");
 
 const updateProfileValidation = Joi.object({
   username: Joi.string()
