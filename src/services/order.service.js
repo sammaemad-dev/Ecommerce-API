@@ -1,7 +1,10 @@
 const Order = require("../models/order.model");
 const Cart = require("../models/Cart.model");
 const Product = require("../models/product.model");
-const { sendOrderConfirmation } = require("./email.services");
+const {
+  sendOrderConfirmation,
+  sendPaymentConfirmation,
+} = require("./email.services");
 // Create a new order from active cart
 const createOrder = async (
   userId,
@@ -109,6 +112,7 @@ const payOrderWithCash = async (userId, orderId) => {
   order.status = "confirmed";
   order.paidAt = new Date();
 
+  await sendPaymentConfirmation(order);
   await order.save();
 
   return order;

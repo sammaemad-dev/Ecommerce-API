@@ -51,6 +51,36 @@ async function sendOrderConfirmation(order) {
   });
 }
 
+async function sendPaymentConfirmation(order) {
+  const user = await User.findById(order.user);
+  if (!user) throw createError("User Id Not Correct", 400);
+  const email = user.email;
+  const name = user.username;
+  const html = `
+    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+      <h2 style="color: #4CAF50;">Payment Successful!</h2>
+      <p>Hello ${name},</p>
+      <p>Thank you for your purchase. We have successfully received your payment.</p>
+      
+      <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p><strong>Order ID:</strong> ${order.id}</p>
+        <p><strong>Amount Paid:</strong> $${order.totalPrice.toFixed(2)}</p>
+      </div>
+      
+      <p>If you have any questions, please contact our support team.</p>
+      <p>Best regards,<br>Your Company Team</p>
+    </div>
+  `;
+
+  await sendEmail({
+    to: email,
+    subject: "Payment Confirmation",
+    text: "Your Payment processed successfully",
+    html,
+  });
+}
+
 module.exports = {
   sendOrderConfirmation,
+  sendPaymentConfirmation,
 };
