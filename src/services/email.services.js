@@ -1,27 +1,30 @@
 const sendEmail = require("../utils/sendEmail");
 const User = require("../models/user.model");
-
+const handleMailError = require("../utils/emailError");
 function createError(message, statusCode) {
   const err = new Error(message);
   err.statusCode = statusCode;
   return err;
 }
 async function sendOrderConfirmation(order) {
-  const user = await User.findById(order.user);
-  if (!user) throw createError("User Id Not Correct", 400);
-  const email = user.email;
-  const name = user.username;
-  const itemsHtml = order.items
-    .map(
-      (item) => `
+  try {
+    const user = await User.findById(order.user);
+    if (!user) throw createError("User Id Not Correct", 400);
+    const email = user.email;
+    const name = user.username;
+
+    const itemsHtml = order.items
+      .map(
+        (item) => `
         <tr>
             <td style="padding: 10px; border-bottom: 1px solid #ddd;">${item.name} (x${item.quantity})</td>
             <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">${item.price.toFixed(2)}</td>
         </tr>
     `,
-    )
-    .join("");
-  const html = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee;">
+      )
+      .join("");
+      
+    const html = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee;">
                 <h2 style="color: #333;">Thank you for your order, ${name}!</h2>
                 <p>We're getting your order ready. Below is your confirmation details.</p>
                 <p><strong>Order ID:</strong> #${order.id}</p>
@@ -43,20 +46,25 @@ async function sendOrderConfirmation(order) {
                 <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
                 <p style="font-size: 12px; color: #777; text-align: center;">If you have any questions, reply to this email.</p>
             </div>`;
-  await sendEmail({
-    to: email,
-    subject: "Order Confirmation",
-    text: "Order Created Successfully!",
-    html,
-  });
+    await sendEmail({
+      to: email,
+      subject: "Order Confirmation",
+      text: "Order Created Successfully!",
+      html,
+    });
+  } catch (err) {
+    throw handleMailError(err);
+  }
 }
 
 async function sendPaymentConfirmation(order) {
-  const user = await User.findById(order.user);
-  if (!user) throw createError("User Id Not Correct", 400);
-  const email = user.email;
-  const name = user.username;
-  const html = `
+  try {
+    const user = await User.findById(order.user);
+    if (!user) throw createError("User Id Not Correct", 400);
+    const email = user.email;
+    const name = user.username;
+
+    const html = `
     <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
       <h2 style="color: #4CAF50;">Payment Successful!</h2>
       <p>Hello ${name},</p>
@@ -72,12 +80,15 @@ async function sendPaymentConfirmation(order) {
     </div>
   `;
 
-  await sendEmail({
-    to: email,
-    subject: "Payment Confirmation",
-    text: "Your Payment processed successfully",
-    html,
-  });
+    await sendEmail({
+      to: email,
+      subject: "Payment Confirmation",
+      text: "Your Payment processed successfully",
+      html,
+    });
+  } catch (err) {
+    throw handleMailError(err);
+  }
 }
 
 module.exports = {
