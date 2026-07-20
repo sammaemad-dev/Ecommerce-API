@@ -5,12 +5,16 @@ const {
   sendOrderConfirmation,
   sendPaymentConfirmation,
 } = require("./email.services");
+
+const inventoryService = require("./inventory.service");
+
+
 // Create a new order from active cart
 const createOrder = async (
   userId,
   { shippingAddress, paymentMethod, customerNote },
 ) => {
-  // Fetch the user's active cart
+  // Fetch the user's achttps://github.com/sammaemad-devtive cart
   const cart = await Cart.findOne({ user: userId });
   if (!cart || cart.items.length === 0) {
     const error = new Error("Your cart is empty.");
@@ -51,6 +55,7 @@ const createOrder = async (
     customerNote,
   });
 
+
   // Update inventory in bulk
   const bulkOps = cart.items.map((item) => ({
     updateOne: {
@@ -59,6 +64,11 @@ const createOrder = async (
     },
   }));
   await Product.bulkWrite(bulkOps);
+
+  for (const item of order.items) {
+    await inventoryService.deductStock(item.product, item.quantity);
+  }
+
 
   // Clear the user's cart
   cart.items = [];
@@ -118,8 +128,37 @@ const payOrderWithCash = async (userId, orderId) => {
   return order;
 };
 
+async function cancelOrder(userId, orderId) {
+  const order = await Order.findOne({ _id: orderId, user: userId });
+
+  if (!order) {
+    const error = new Error("Order not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (order.status === "cancelled") {
+    const error = new Error("This order has already been cancelled.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  for (const item of order.items) {
+    await inventoryService.restoreStock(item.product, item.quantity);
+  }
+
+  order.status = "cancelled";
+  await order.save();
+
+  return order;
+}
+
 module.exports = {
   createOrder,
   getUserOrders,
   payOrderWithCash,
+
+
+  cancelOrder,
+
 };
