@@ -50,7 +50,16 @@ Body :
 
 note : returns accessToken. also sets refreshToken in cookies.
 
-# 5 - Check Auth Health
+# 5 - Refresh Token
+method : POST
+url : http://localhost:3000/api/auth/refresh
+
+header : none (but MUST include the `refreshToken` cookie sent automatically by the browser)
+Body : none
+
+note : This endpoint is used to get a new access token when the current one expires. It reads the `refreshToken` from the `httpOnly` cookie set during login, verifies it, and returns a new `accessToken` (while also rotating the refresh cookie).
+
+# 6 - Check Auth Health
 method : GET
 url : http://localhost:3000/api/auth/checkAuthHealth
 
@@ -59,7 +68,7 @@ Body : none
 
 note : check if you are logged in correctly.
 
-# 6 - Get Profile
+# 7 - Get Profile
 method : GET
 url : http://localhost:3000/api/auth/profile
 
@@ -68,7 +77,7 @@ Body : none
 
 note : gets user profile data.
 
-# 7 - Update Profile
+# 8 - Update Profile
 method : PUT
 url : http://localhost:3000/api/auth/profile
 
@@ -81,7 +90,7 @@ Body :
 
 note : update user username or phone. you must send at least one field.
 
-# 8 - Change Password
+# 9 - Change Password
 method : PUT
 url : http://localhost:3000/api/auth/change-password
 
@@ -94,7 +103,7 @@ Body :
 
 note : changes password. new password must be different.
 
-# 9 - Forgot Password
+# 10 - Forgot Password
 method : POST
 url : http://localhost:3000/api/auth/forgotPassword
 
@@ -106,7 +115,7 @@ Body :
 
 note : sends reset password otp code to email.
 
-# 10 - Reset Password
+# 11 - Reset Password
 method : POST
 url : http://localhost:3000/api/auth/resetPassword
 
@@ -121,7 +130,7 @@ Body :
 
 note : resets the password if otp is correct and passwords match.
 
-# 11 - Logout
+# 12 - Logout
 method : POST
 url : http://localhost:3000/api/auth/logout
 
@@ -130,7 +139,7 @@ Body : none
 
 note : clears refresh token cookie.
 
-# 12 - Get All Products
+# 13 - Get All Products
 method : GET
 url : http://localhost:3000/api/products
 
@@ -139,7 +148,7 @@ Body : none
 
 note : gets all products from database.
 
-# 13 - Get Product by ID
+# 14 - Get Product by ID
 method : GET
 url : http://localhost:3000/api/products/[PRODUCT_ID]
 
@@ -148,7 +157,7 @@ Body : none
 
 note : gets a single product's details using its ID.
 
-# 14 - Create Product
+# 15 - Create Product
 method : POST
 url : http://localhost:3000/api/products
 
@@ -165,7 +174,7 @@ form-data:
 
 note : creates a new product. requires login. you can upload up to 5 images.
 
-# 15 - Update Product
+# 16 - Update Product
 method : PUT
 url : http://localhost:3000/api/products/[PRODUCT_ID]
 
@@ -178,7 +187,7 @@ form-data:
 
 note : updates a product using its ID. requires login. you can send only the fields you want to change.
 
-# 16 - Delete Product
+# 17 - Delete Product
 method : DELETE
 url : http://localhost:3000/api/products/[PRODUCT_ID]
 
@@ -187,7 +196,7 @@ Body : none
 
 note : deletes a product. requires login.
 
-# 17 - Get Cart
+# 18 - Get Cart
 method : GET
 url : http://localhost:3000/api/carts
 
@@ -196,7 +205,7 @@ Body : none
 
 note : gets the current user's cart with all items and total price.
 
-# 18 - Add Item to Cart
+# 19 - Add Item to Cart
 method : POST
 url : http://localhost:3000/api/carts/items
 
@@ -209,7 +218,7 @@ Body :
 
 note : adds a product to the cart. quantity is optional, defaults to 1.
 
-# 19 - Update Item Quantity
+# 20 - Update Item Quantity
 method : PATCH
 url : http://localhost:3000/api/carts/items
 
@@ -222,7 +231,7 @@ Body :
 
 note : updates the quantity of an existing item in the cart.
 
-# 20 - Remove Item from Cart
+# 21 - Remove Item from Cart
 method : DELETE
 url : http://localhost:3000/api/carts/items/[PRODUCT_ID]
 
@@ -231,7 +240,7 @@ Body : none
 
 note : removes a single item from the cart using its product ID.
 
-# 21 - Apply Coupon
+# 22 - Apply Coupon
 method : POST
 url : http://localhost:3000/api/carts/coupon
 
@@ -243,7 +252,7 @@ Body :
 
 note : applies a coupon code to the cart.
 
-# 22 - Remove Coupon
+# 23 - Remove Coupon
 method : DELETE
 url : http://localhost:3000/api/carts/coupon
 
@@ -252,7 +261,7 @@ Body : none
 
 note : removes the applied coupon from the cart.
 
-# 23 - Clear Cart
+# 24 - Clear Cart
 method : DELETE
 url : http://localhost:3000/api/carts/clear
 
@@ -265,7 +274,7 @@ note : removes all items from the cart.
 # WISHLIST ENDPOINTS
 ---------------------------------------------------
 
-# 24 - Get Wishlist
+# 25 - Get Wishlist
 method : GET
 url : http://localhost:3000/api/wishlist
 
@@ -274,7 +283,7 @@ Body : none
 
 note : returns all saved products in the user's wishlist.
 
-# 25 - Add Product to Wishlist
+# 26 - Add Product to Wishlist
 method : POST
 url : http://localhost:3000/api/wishlist
 
@@ -286,7 +295,7 @@ Body :
 
 note : saves a product to the wishlist. if it is already there it will not be added twice.
 
-# 26 - Remove Product from Wishlist
+# 27 - Remove Product from Wishlist
 method : DELETE
 url : http://localhost:3000/api/wishlist/[PRODUCT_ID]
 
@@ -295,7 +304,7 @@ Body : none
 
 note : removes a single product from the wishlist using its product ID.
 
-# 27 - Clear Wishlist
+# 28 - Clear Wishlist
 method : DELETE
 url : http://localhost:3000/api/wishlist
 
@@ -308,7 +317,7 @@ note : removes all products from the wishlist.
 # COUPON ENDPOINTS  (admin only)
 ---------------------------------------------------
 
-# 28 - Create Coupon
+# 29 - Create Coupon
 method : POST
 url : http://localhost:3000/api/coupons
 
@@ -325,7 +334,7 @@ Body :
 
 note : creates a new coupon. discountType is "percentage" or "fixed". requires admin role.
 
-# 29 - Get All Coupons
+# 30 - Get All Coupons
 method : GET
 url : http://localhost:3000/api/coupons
 
@@ -334,7 +343,7 @@ Body : none
 
 note : returns all coupons. requires admin role.
 
-# 30 - Get Coupon by ID
+# 31 - Get Coupon by ID
 method : GET
 url : http://localhost:3000/api/coupons/[COUPON_ID]
 
@@ -343,7 +352,7 @@ Body : none
 
 note : returns a single coupon by its ID. requires admin role.
 
-# 31 - Update Coupon
+# 32 - Update Coupon
 method : PATCH
 url : http://localhost:3000/api/coupons/[COUPON_ID]
 
@@ -356,7 +365,7 @@ Body :
 
 note : updates any field of a coupon. send only the fields you want to change. requires admin role.
 
-# 32 - Delete Coupon
+# 33 - Delete Coupon
 method : DELETE
 url : http://localhost:3000/api/coupons/[COUPON_ID]
 
@@ -369,7 +378,7 @@ note : permanently deletes a coupon. requires admin role.
 # ORDER ENDPOINTS
 ---------------------------------------------------
 
-# 33 - Place Order
+# 34 - Place Order
 method : POST
 url : http://localhost:3000/api/orders
 
@@ -390,7 +399,7 @@ Body :
 
 note : places a new order from the items currently in the user's cart. paymentMethod options are: cash, stripe, paypal, paymob. cart must not be empty. stock is checked and reduced automatically.
 
-# 34 - Get My Orders
+# 35 - Get My Orders
 method : GET
 url : http://localhost:3000/api/orders
 
@@ -399,7 +408,7 @@ Body : none
 
 note : returns all orders placed by the logged-in user, sorted from newest to oldest.
 
-# 35 - Pay Order with Cash
+# 36 - Pay Order with Cash
 method : POST
 url : http://localhost:3000/api/orders/[ORDER_ID]/pay/cash
 
@@ -410,3 +419,99 @@ Body :
 }
 
 note : marks a cash order as paid and confirms it. only works if the order paymentMethod is "cash" and it has not been paid yet.
+
+# 37 - Pay Order with Stripe (Create Checkout Session)
+method : POST
+url : http://localhost:3000/api/orders/[ORDER_ID]/pay/stripe/checkout
+
+header : Authorization: Bearer <token>, Content-Type: application/json
+Body :
+{
+  "orderId": "[ORDER_ID]",
+  "successUrl": "http://localhost:3000/success", // optional
+  "cancelUrl": "http://localhost:3000/cancel" // optional
+}
+
+note : Creates a Stripe checkout session for an order with paymentMethod "stripe". Returns the checkout session URL and ID. 
+
+**Test Cases / Examples:**
+- **Pre-requisite**: The order must have `paymentMethod: "stripe"` and `paymentStatus: "pending"`.
+- **Request Example**: `POST /api/orders/6a5bb054142f69782ea317d1/pay/stripe/checkout`
+- **Expected Success Response (200)**:
+  ```json
+  {
+    "success": true,
+    "message": "Stripe checkout session created successfully.",
+    "data": {
+      "checkoutUrl": "https://checkout.stripe.com/c/pay/cs_test_...",
+      "sessionId": "cs_test_...",
+      "amount": 620,
+      "currency": "egp"
+    }
+  }
+  ```
+- **Error Case (400)**: If `paymentMethod` is `"cash"`, it returns `"This order is not configured for Stripe payment."`.
+- **Error Case (400)**: If already paid, it returns `"This order has already been paid."`.
+
+# 38 - Verify Stripe Checkout Payment
+method : POST
+url : http://localhost:3000/api/orders/[ORDER_ID]/pay/stripe/verify
+
+header : Authorization: Bearer <token>, Content-Type: application/json
+Body :
+{
+  "orderId": "[ORDER_ID]",
+  "sessionId": "cs_test_..." // optional, uses order's transactionId if omitted
+}
+
+note : Verifies a Stripe checkout session after payment is completed.
+
+**Test Cases / Examples:**
+- **Request Example**: `POST /api/orders/6a5bb054142f69782ea317d1/pay/stripe/verify`
+- **Expected Success Response (200)** (Only works after user actually pays via the `checkoutUrl`):
+  ```json
+  {
+    "success": true,
+    "message": "Stripe checkout payment verified successfully.",
+    "data": {
+      "paymentStatus": "paid",
+      "checkoutSessionStatus": "complete"
+    }
+  }
+  ```
+- **Expected Unpaid Response (400)** (If tested before paying the checkout link):
+  ```json
+  {
+    "success": false,
+    "message": "Checkout has not been completed yet.",
+    "checkoutSessionStatus": "open",
+    "checkoutPaymentStatus": "unpaid"
+  }
+  ```
+
+# 39 - Stripe Webhook
+method : POST
+url : http://localhost:3000/api/webhooks/stripe
+
+header : Stripe-Signature: <signature>, Content-Type: application/json (raw body)
+Body : Stripe Event Object
+
+note : Webhook endpoint for handling async Stripe events (e.g., checkout.session.completed). 
+
+**Test Cases / Examples:**
+- **How to test locally**: Install Stripe CLI and run:
+  `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
+- Once running, whenever a payment is made successfully via the checkout session, Stripe will automatically send a `checkout.session.completed` event to this endpoint, which marks the database order as paid.
+
+# 40 - Get All Products (with Search, Filter, Pagination, Sort)
+method : GET
+url : http://localhost:3000/api/products?page=1&limit=10&search=Apple&price[gte]=500&sort=-price
+
+header : none
+Body : none
+
+note : 
+- `page` and `limit` are used for pagination (e.g. `page=1&limit=10`).
+- `search` is used to search the product name (e.g. `search=Apple`).
+- Filters can be applied to fields like price (e.g. `price[gte]=500` for price >= 500). Supported operators: `gte`, `gt`, `lte`, `lt`.
+- `sort` sorts the results (e.g. `sort=-price` sorts by price descending, `sort=price` sorts by price ascending).

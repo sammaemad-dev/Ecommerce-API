@@ -8,6 +8,7 @@ const {
   getProfile,
   updateProfile,
   changePassword,
+  refresh,
 } = require("../controllers/auth.controller");
 const validate = require("../middlewares/validate.middleware");
 const { authMiddleware } = require("../middlewares/authMiddleware");
@@ -34,6 +35,7 @@ router.get("/checkAuthHealth", authMiddleware, (req, res) => {
 
 router.post("/register", validate(registerValidation), register);
 router.post("/login", validate(loginValidation), login);
+router.post("/refresh", refresh);
 router.post("/verifyOTP", validate(verifyOTPValidation), verifyOTP);
 router.post("/logout", logout);
 router.post("/forgotPassword", validate(forgotPasswordValidation), forgotPassword);
