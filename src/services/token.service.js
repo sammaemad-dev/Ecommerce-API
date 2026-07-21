@@ -25,9 +25,11 @@ async function generateTokens(userId) {
     expiresIn: ACCESS_TOKEN_EXPIRY,
   });
 
-  const refreshToken = jwt.sign(payload, REFRESH_TOKEN_SECRET, {
-    expiresIn: REFRESH_TOKEN_EXPIRY,
-  });
+  const refreshToken = jwt.sign(
+    { ...payload, jti: crypto.randomUUID() },
+    REFRESH_TOKEN_SECRET,
+    { expiresIn: REFRESH_TOKEN_EXPIRY },
+  );
 
   await RefreshToken.create({
     token: hashToken(refreshToken),
