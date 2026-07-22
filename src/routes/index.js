@@ -9,6 +9,7 @@ const cartRoutes = require("./cart.route");
 const wishlistRoutes = require("./wishlist.route");
 const couponRoutes = require("./coupon.router");
 const orderRoutes = require("./order.route");
+const adminOrderRoutes = require("./adminOrder.route");
 
 router.use("/auth", authRoutes);
 router.use("/products", productRoutes);
@@ -16,5 +17,5 @@ router.use("/carts", cartRoutes);
 router.use("/wishlist", wishlistRoutes);
 router.use("/coupons", couponRoutes);
 router.use("/orders", orderRoutes);
-
+router.use("/api/admin/orders", adminOrderRoutes);
 module.exports = router;
