@@ -18,7 +18,7 @@ router.use("/carts", cartRoutes);
 router.use("/wishlist", wishlistRoutes);
 router.use("/coupons", couponRoutes);
 router.use("/orders", orderRoutes);
-router.use("/api/admin/orders", adminOrderRoutes);
+router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/dashboard", dashboardRoutes);
 
 module.exports = router;

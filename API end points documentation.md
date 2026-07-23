@@ -498,11 +498,6 @@ Body : Stripe Event Object
 
 note : Webhook endpoint for handling async Stripe events (e.g., checkout.session.completed). 
 
-**Test Cases / Examples:**
-- **How to test locally**: Install Stripe CLI and run:
-  `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
-- Once running, whenever a payment is made successfully via the checkout session, Stripe will automatically send a `checkout.session.completed` event to this endpoint, which marks the database order as paid.
-
 # 40 - Get All Products (with Search, Filter, Pagination, Sort)
 method : GET
 url : http://localhost:3000/api/products?page=1&limit=10&search=Apple&price[gte]=500&sort=-price
@@ -510,8 +505,65 @@ url : http://localhost:3000/api/products?page=1&limit=10&search=Apple&price[gte]
 header : none
 Body : none
 
-note : 
-- `page` and `limit` are used for pagination (e.g. `page=1&limit=10`).
-- `search` is used to search the product name (e.g. `search=Apple`).
-- Filters can be applied to fields like price (e.g. `price[gte]=500` for price >= 500). Supported operators: `gte`, `gt`, `lte`, `lt`.
-- `sort` sorts the results (e.g. `sort=-price` sorts by price descending, `sort=price` sorts by price ascending).
+---------------------------------------------------
+# ADMIN ORDER MANAGEMENT ENDPOINTS  (admin only)
+--------------------------------------------------
+# 41 - Get All Orders (Admin)
+method : GET
+url : http://localhost:3000/api/admin/orders
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : returns all orders from all users. requires admin role. sorted newest first.
+
+# 42 - Filter Orders (Admin)
+method : GET
+url : http://localhost:3000/api/admin/orders/filter
+
+header : Authorization: Bearer <token>
+Body : none
+
+Query params (all optional):
+- status       : pending | confirmed | processing | shipped | delivered | cancelled | returned
+- paymentStatus: pending | paid | failed | refunded
+- paymentMethod: cash | stripe
+- sort         : asc | desc
+- page         : page number (default 1)
+- limit        : results per page (default 10, max 100)
+
+Example: /api/admin/orders/filter?status=pending&paymentStatus=paid
+
+note : filters the full order list by any combination of the above query parameters. requires admin role.
+
+# 43 - Search Orders (Admin)
+method : GET
+url : http://localhost:3000/api/admin/orders/search?keyword=[keyword]
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : searches orders by user (username, email, phone), shipping address (fullName, phone, country, city, address), order ID, transaction ID, status, paymentMethod, paymentStatus, customerNote, or adminNote. keyword is required. requires admin role.
+
+# 44 - Update Order Status (Admin)
+method : PATCH
+url : http://localhost:3000/api/admin/orders/[ORDER_ID]/status
+
+header : Authorization: Bearer <token>, Content-Type: application/json
+Body :
+{
+  "status": "shipped",
+  "adminNote": "Shipped via DHL"
+}
+
+note : updates the status of any order.
+-------------------------------------------------
+# ADMIN DASHBOARD ENDPOINT  (admin only)
+---------------------------------------------------
+
+# 45 - Get Dashboard Analytics
+method : GET
+url : http://localhost:3000/api/admin/dashboard
+
+header : Authorization: Bearer <token>
+Body : none
