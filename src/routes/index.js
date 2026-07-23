@@ -11,7 +11,8 @@ const couponRoutes = require("./coupon.router");
 const orderRoutes = require("./order.route");
 const adminOrderRoutes = require("./adminOrder.route");
 const dashboardRoutes = require("./dashboard.route");
-
+const exportRoutes = require("./export.route");
+router.use("/admin/export", exportRoutes);
 router.use("/auth", authRoutes);
 router.use("/products", productRoutes);
 router.use("/carts", cartRoutes);
