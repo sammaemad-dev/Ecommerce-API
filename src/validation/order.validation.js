@@ -79,6 +79,19 @@ const adminOrdersFilterValidation = Joi.object({
   endDate: Joi.date().optional(),
 });
 
+const exportOrdersValidation = Joi.object({
+  format: Joi.string().valid("csv", "xlsx").default("csv").messages({
+    "any.only": "Export format must be either 'csv' or 'xlsx'.",
+  }),
+  status: Joi.string()
+    .valid("pending","confirmed","processing","shipped","delivered","cancelled","returned")
+    .optional(),
+  paymentStatus: Joi.string().valid("pending", "paid", "failed", "refunded").optional(),
+  paymentMethod: Joi.string().valid("cash", "stripe", "paypal", "paymob").optional(),
+  startDate: Joi.date().optional(),
+  endDate: Joi.date().optional(),
+});
+
 const updateOrderStatusValidation = Joi.object({
   orderId: orderIdSchema,
   status: Joi.string()
