@@ -30,7 +30,7 @@ const filterOrders = async (req, res) => {
       status,
       paymentStatus,
       paymentMethod,
-      user,
+      userId,
     } = req.query;
 
     const filter = {};
@@ -41,7 +41,7 @@ const filterOrders = async (req, res) => {
 
     if (paymentMethod) filter.paymentMethod = paymentMethod;
 
-    if (user) filter.user = user;
+    if (userId) filter.user = userId;
 
     const orders = await Order.find(filter)
       .populate("user", "username email")
@@ -246,9 +246,37 @@ const updateOrderStatus = async (req, res) => {
 }
 
 
+const getOrderById = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const order = await Order.findById(orderId)
+      .populate("user", "username email phone")
+      .populate("items.product", "name price images");
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      order,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
 module.exports = {
   getAllOrders,
   filterOrders,
   searchOrders,
   updateOrderStatus,
+  getOrderById,
 };

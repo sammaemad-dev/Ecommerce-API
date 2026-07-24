@@ -525,6 +525,7 @@ header : Authorization: Bearer <token>
 Body : none
 
 Query params (all optional):
+- userId       : string (ObjectId of a specific user)
 - status       : pending | confirmed | processing | shipped | delivered | cancelled | returned
 - paymentStatus: pending | paid | failed | refunded
 - paymentMethod: cash | stripe
@@ -532,7 +533,7 @@ Query params (all optional):
 - page         : page number (default 1)
 - limit        : results per page (default 10, max 100)
 
-Example: /api/admin/orders/filter?status=pending&paymentStatus=paid
+Example: /api/admin/orders/filter?userId=6a5bb054142f69782ea317d1&status=pending
 
 note : filters the full order list by any combination of the above query parameters. requires admin role.
 
@@ -543,7 +544,16 @@ url : http://localhost:3000/api/admin/orders/search?keyword=[keyword]
 header : Authorization: Bearer <token>
 Body : none
 
-note : searches orders by user (username, email, phone), shipping address (fullName, phone, country, city, address), order ID, transaction ID, status, paymentMethod, paymentStatus, customerNote, or adminNote. keyword is required. requires admin role.
+note : search orders by user username, email, phone, or shipping fields like fullName, phone, or exact order ID. requires admin role.
+
+# 44 - Get Order by ID (Admin)
+method : GET
+url : http://localhost:3000/api/admin/orders/[ORDER_ID]
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : returns full details of a specific order, including populated user and product details. requires admin role.
 
 # 44 - Update Order Status (Admin)
 method : PATCH
@@ -561,9 +571,27 @@ note : updates the status of any order.
 # ADMIN DASHBOARD ENDPOINT  (admin only)
 ---------------------------------------------------
 
-# 45 - Get Dashboard Analytics
+# 46 - Get Dashboard Analytics
 method : GET
 url : http://localhost:3000/api/admin/dashboard
 
 header : Authorization: Bearer <token>
 Body : none
+
+# 47 - Export Orders (CSV)
+method : GET
+url : http://localhost:3000/api/admin/export/orders?format=csv
+
+header : Authorization: Bearer <token>
+Body : none
+
+Query params (all optional):
+- format       : csv | xlsx (default is csv)
+- status       : pending | confirmed | processing | shipped | delivered | cancelled | returned
+- paymentStatus: pending | paid | failed | refunded
+- paymentMethod: cash | stripe
+
+
+Example: /api/admin/export/orders?format=xlsx&status=shipped
+
+note : generates and downloads a file containing the orders data. requires admin role.

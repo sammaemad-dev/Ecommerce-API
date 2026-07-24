@@ -8,6 +8,7 @@ const {
   adminOrdersFilterValidation,
   searchOrdersValidation,
   updateOrderStatusValidation,
+  orderIdParamValidation,
 } = require("../validation/order.validation");
 
 const {
@@ -15,6 +16,7 @@ const {
   filterOrders,
   searchOrders,
   updateOrderStatus,
+  getOrderById,
 } = require("../controllers/adminOrder.controller");
 
 router.get("/", authMiddleware, isAdmin, getAllOrders);
@@ -33,6 +35,14 @@ router.get(
   isAdmin,
   validate(searchOrdersValidation),
   searchOrders
+);
+
+router.get(
+  "/:id",
+  authMiddleware,
+  isAdmin,
+  validate(orderIdParamValidation),
+  getOrderById
 );
 
 router.patch(
