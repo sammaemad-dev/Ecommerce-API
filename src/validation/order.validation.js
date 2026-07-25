@@ -58,6 +58,7 @@ const cancelOrderValidation = Joi.object({
 });
 
 const adminOrdersFilterValidation = Joi.object({
+  userId: Joi.string().hex().length(24).optional(),
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(10),
   status: Joi.string()
@@ -93,7 +94,7 @@ const exportOrdersValidation = Joi.object({
 });
 
 const updateOrderStatusValidation = Joi.object({
-  orderId: orderIdSchema,
+  id: orderIdSchema,
   status: Joi.string()
     .valid(
       "pending",
@@ -109,6 +110,7 @@ const updateOrderStatusValidation = Joi.object({
       "any.required": "Order status is required.",
       "any.only": "Invalid order status.",
     }),
+  adminNote: Joi.string().trim().max(1000).optional(),
 });
 
 const cashPaymentValidation = Joi.object({
@@ -159,5 +161,6 @@ module.exports = {
   cashPaymentValidation,
   stripeCheckoutValidation,
   stripeVerifyValidation,
-  searchOrdersValidation
+  searchOrdersValidation,
+  exportOrdersValidation
 };
