@@ -1,6 +1,7 @@
 const getStripeClient = require("../config/stripe");
 const Order = require("../models/order.model");
 const { restoreStock } = require("./inventory.service");
+const { addOrderHistory } = require("./history.service");
 const { handleStripeError } = require("../utils/stripeErrors");
 const { sendPaymentConfirmation } = require("./email.services");
 function getStripeCurrency() {
@@ -74,6 +75,10 @@ async function markOrderPaid(order) {
   order.paymentStatus = "paid";
   order.status = "confirmed";
   order.paidAt = new Date();
+  
+  // Add history record for status change
+  await addOrderHistory(order, "confirmed", null, "Stripe payment completed");
+  
   await order.save();
 
   return order;

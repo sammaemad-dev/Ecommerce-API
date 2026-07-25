@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Order = require("../models/order.model");
 const Cart = require("../models/Cart.model");
 const Product = require("../models/product.model");
@@ -7,80 +8,92 @@ const {
 } = require("./email.services");
 
 const inventoryService = require("./inventory.service");
-
+const { addOrderHistory } = require("./history.service");
 
 // Create a new order from active cart
 const createOrder = async (
   userId,
   { shippingAddress, paymentMethod, customerNote },
 ) => {
-  // Fetch the user's achttps://github.com/sammaemad-devtive cart
-  const cart = await Cart.findOne({ user: userId });
-  if (!cart || cart.items.length === 0) {
-    const error = new Error("Your cart is empty.");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  // Verify stock availability
-  for (const item of cart.items) {
-    const product = await Product.findById(item.product);
-    if (!product || !product.isActive) {
-      const error = new Error(
-        `The product "${item.name}" is no longer available.`,
-      );
-      error.statusCode = 404;
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    // Fetch the user's active cart inside the transaction
+    const cart = await Cart.findOne({ user: userId }).session(session);
+    if (!cart || cart.items.length === 0) {
+      const error = new Error("Your cart is empty.");
+      error.statusCode = 400;
       throw error;
     }
-    // if (product.stock < item.quantity) {
-    //   const error = new Error(`Insufficient stock for "${item.name}".`);
-    //   error.statusCode = 400;
-    //   throw error;
-    // }
+
+    // Verify stock availability (reads done with the session)
+    for (const item of cart.items) {
+      const product = await Product.findById(item.product).session(session);
+      if (!product || !product.isActive) {
+        const error = new Error(
+          `The product "${item.name}" is no longer available.`,
+        );
+        error.statusCode = 404;
+        throw error;
+      }
+      // if (product.stock < item.quantity) {
+      //   const error = new Error(`Insufficient stock for "${item.name}".`);
+      //   error.statusCode = 400;
+      //   throw error;
+      // }
+    }
+
+    // Create the order within the transaction
+    const order = new Order({
+      user: userId,
+      items: cart.items.map((item) => ({
+        product: item.product,
+        name: item.name,
+        image: item.image,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+      shippingAddress,
+      paymentMethod,
+      discount: cart.discountAmount || 0,
+      customerNote,
+    });
+
+    // Add initial history record
+    await addOrderHistory(order, "pending", null, "Order created");
+
+    await order.save({ session });
+
+    // Update inventory using inventoryService.deductStock for each item.
+    // inventoryService.deductStock performs an atomic findOneAndUpdate with stock check,
+    // so using it prevents negative stock and preserves business validations.
+    for (const item of order.items) {
+      await inventoryService.deductStock(item.product, item.quantity, session);
+    }
+
+    // Clear the user's cart within the transaction
+    cart.items = [];
+    cart.coupon = {
+      code: null,
+      discountType: null,
+      discountValue: 0,
+      maxDiscount: null,
+    };
+    await cart.save({ session });
+
+    // Commit the transaction before performing external side-effects (emails)
+    await session.commitTransaction();
+    session.endSession();
+
+    // Send confirmation email outside transaction to avoid coupling
+    await sendOrderConfirmation(order);
+
+    return order;
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
   }
-
-  // Create the order
-  const order = await Order.create({
-    user: userId,
-    items: cart.items.map((item) => ({
-      product: item.product,
-      name: item.name,
-      image: item.image,
-      price: item.price,
-      quantity: item.quantity,
-    })),
-    shippingAddress,
-    paymentMethod,
-    discount: cart.discountAmount || 0,
-    customerNote,
-  });
-
-
-  // Update inventory in bulk
-  const bulkOps = cart.items.map((item) => ({
-    updateOne: {
-      filter: { _id: item.product },
-      update: { $inc: { stock: -item.quantity } },
-    },
-  }));
-  await Product.bulkWrite(bulkOps);
-
-  for (const item of order.items) {
-    await inventoryService.deductStock(item.product, item.quantity);
-  }
-
-
-  // Clear the user's cart
-  cart.items = [];
-  cart.coupon = {
-    code: null,
-    discountType: null,
-    discountValue: 0,
-    maxDiscount: null,
-  };
-  await cart.save();
-  await sendOrderConfirmation(order);
-  return order;
 };
 
 // Retrieve user's order history
@@ -122,6 +135,9 @@ const payOrderWithCash = async (userId, orderId) => {
   order.status = "confirmed";
   order.paidAt = new Date();
 
+  // Add history record for status change
+  await addOrderHistory(order, "confirmed", null, "Cash payment completed");
+
   await sendPaymentConfirmation(order);
   await order.save();
 
@@ -129,7 +145,49 @@ const payOrderWithCash = async (userId, orderId) => {
 };
 
 async function cancelOrder(userId, orderId) {
-  const order = await Order.findOne({ _id: orderId, user: userId });
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const order = await Order.findOne({ _id: orderId, user: userId }).session(session);
+
+    if (!order) {
+      const error = new Error("Order not found.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (order.status === "cancelled") {
+      const error = new Error("This order has already been cancelled.");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    for (const item of order.items) {
+      await inventoryService.restoreStock(item.product, item.quantity, session);
+    }
+
+    order.status = "cancelled";
+    order.cancelledAt = new Date();
+
+    // Add history record for cancellation
+    await addOrderHistory(order, "cancelled", null, "Order cancelled by customer");
+
+    await order.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return order;
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
+  }
+}
+
+// Update order status (admin only) - encapsulates all business logic for status updates
+const updateAdminOrderStatus = async (orderId, newStatus, adminNote) => {
+  const order = await Order.findById(orderId);
 
   if (!order) {
     const error = new Error("Order not found.");
@@ -137,28 +195,38 @@ async function cancelOrder(userId, orderId) {
     throw error;
   }
 
-  if (order.status === "cancelled") {
-    const error = new Error("This order has already been cancelled.");
-    error.statusCode = 400;
-    throw error;
+  const statusChanged = order.status !== newStatus;
+  const oldStatus = order.status;
+
+  order.status = newStatus;
+
+  if (adminNote) {
+    order.adminNote = adminNote;
   }
 
-  for (const item of order.items) {
-    await inventoryService.restoreStock(item.product, item.quantity);
+  if (newStatus === "delivered") {
+    order.deliveredAt = new Date();
   }
 
-  order.status = "cancelled";
+  if (newStatus === "cancelled") {
+    order.cancelledAt = new Date();
+  }
+
+  // Add history record if status changed
+  if (statusChanged) {
+    const note = adminNote || `Order status changed from ${oldStatus} to ${newStatus}`;
+    await addOrderHistory(order, newStatus, null, note);
+  }
+
   await order.save();
 
   return order;
-}
+};
 
 module.exports = {
   createOrder,
   getUserOrders,
   payOrderWithCash,
-
-
   cancelOrder,
-
+  updateAdminOrderStatus,
 };

@@ -1,4 +1,5 @@
 const Order = require("../models/order.model");
+const { updateAdminOrderStatus } = require("../services/order.service");
 const getAllOrders = async (req, res) => {
     try {
       const orders = await Order.find()
@@ -146,32 +147,7 @@ const updateOrderStatus = async (req, res) => {
             });
         }
 
-        const order = await Order.findById(req.params.id);
-
-        if(!order){
-
-            return res.status(404).json({
-                success:false,
-                message:"Order not found"
-            });
-
-        }
-
-        order.status = status;
-
-        if(adminNote){
-            order.adminNote = adminNote;
-        }
-
-        if(status==="delivered"){
-            order.deliveredAt = new Date();
-        }
-
-        if(status==="cancelled"){
-            order.cancelledAt = new Date();
-        }
-
-        await order.save();
+        const order = await updateAdminOrderStatus(req.params.id, status, adminNote);
 
         res.status(200).json({
             success:true,
