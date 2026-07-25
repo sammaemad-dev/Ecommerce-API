@@ -12,6 +12,8 @@ const orderRoutes = require("./order.route");
 const adminOrderRoutes = require("./adminOrder.route");
 const dashboardRoutes = require("./dashboard.route");
 const exportRoutes = require("./export.route");
+const searchRoutes = require("./search.route");
+
 router.use("/admin/export", exportRoutes);
 router.use("/auth", authRoutes);
 router.use("/products", productRoutes);
@@ -21,5 +23,6 @@ router.use("/coupons", couponRoutes);
 router.use("/orders", orderRoutes);
 router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/dashboard", dashboardRoutes);
+router.get("/search",searchRoutes);
 
 module.exports = router;
