@@ -1,4 +1,6 @@
 const Order = require("../models/order.model");
+const User = require("../models/user.model");
+const { updateAdminOrderStatus } = require("../services/order.service");
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -198,6 +200,7 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
+
         const order = await Order.findById(req.params.id);
 
         if(!order){
@@ -224,6 +227,9 @@ const updateOrderStatus = async (req, res) => {
         }
 
         await order.save();
+
+    const order = await updateAdminOrderStatus(req.params.id, status, adminNote);
+
 
     res.status(200).json({
       success: true,
