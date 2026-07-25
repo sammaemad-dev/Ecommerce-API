@@ -52,6 +52,7 @@ const productSchema = new mongoose.Schema(
       min: 0,
       required: true,
     },
+    embedding:[Number],
     discountPrice: {
       type: Number,
       default: 0,

@@ -29,11 +29,11 @@ const addressSchema = Joi.object({
     "string.max": "City must not exceed 50 characters.",
     "any.required": "City is required.",
   }),
-  street: Joi.string().trim().min(5).max(200).required().messages({
-    "string.empty": "Street is required.",
-    "string.min": "Street must be at least 5 characters long.",
-    "string.max": "Street must not exceed 200 characters.",
-    "any.required": "Street is required.",
+  address: Joi.string().trim().min(5).max(200).required().messages({
+    "string.empty": "Address is required.",
+    "string.min": "Address must be at least 5 characters long.",
+    "string.max": "Address must not exceed 200 characters.",
+    "any.required": "Address is required.",
   }),
   postalCode: Joi.string().trim().max(20).allow("", null).messages({
     "string.max": "Postal code must not exceed 20 characters.",
