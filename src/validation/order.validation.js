@@ -127,6 +127,10 @@ const stripeCheckoutValidation = Joi.object({
   }),
 });
 
+const stripeIntentValidation = Joi.object({
+  orderId: orderIdSchema,
+});
+
 const stripeVerifyValidation = Joi.object({
   orderId: orderIdSchema,
   sessionId: Joi.string()
@@ -160,6 +164,7 @@ module.exports = {
   updateOrderStatusValidation,
   cashPaymentValidation,
   stripeCheckoutValidation,
+  stripeIntentValidation,
   stripeVerifyValidation,
   searchOrdersValidation,
   exportOrdersValidation
