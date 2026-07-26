@@ -6,6 +6,21 @@ function createError(message, statusCode) {
   err.statusCode = statusCode;
   return err;
 }
+
+async function sendOTPEmail(email, otp) {
+  try {
+
+    await sendEmail({
+      to: email,
+      subject: "Verification Code",
+      text: `Your verification code is ${otp}. It expires in 10 minutes.`,
+    });
+
+  } catch (err) {
+    throw handleMailError(err);
+  }
+}
+
 async function sendOrderConfirmation(order) {
   try {
     const user = await User.findById(order.user);
@@ -90,8 +105,55 @@ async function sendPaymentConfirmation(order) {
     throw handleMailError(err);
   }
 }
+///////////////////////////////////////////////
+async function sendOrderStatusUpdate(order) {
+  try {
+    const user = await User.findById(order.user);
+    if (!user) throw createError("User Id Not Correct", 400);
 
+    const email = user.email;
+    const name = user.username;
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width:600px; margin:auto; padding:20px; border:1px solid #eee;">
+        <h2 style="color:#333;">Hello ${name},</h2>
+
+        <p>Your order status has been updated.</p>
+
+        <p>
+          <strong>Order ID:</strong>
+          ${order._id}
+        </p>
+
+        <p>
+          <strong>Current Status:</strong>
+          <span style="color:#2196F3;">
+            ${order.status}
+          </span>
+        </p>
+
+        <p>
+          Thank you for shopping with us.
+        </p>
+
+      </div>
+    `;
+
+    await sendEmail({
+      to: email,
+      subject: "Order Status Updated",
+      text: `Your order status is now ${order.status}`,
+      html,
+    });
+
+  } catch (err) {
+    throw handleMailError(err);
+  }
+}
+///////////////////////////////////////
 module.exports = {
+  sendOTPEmail,
   sendOrderConfirmation,
   sendPaymentConfirmation,
+  sendOrderStatusUpdate,
 };

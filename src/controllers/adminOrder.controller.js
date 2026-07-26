@@ -1,6 +1,6 @@
 const Order = require("../models/order.model");
 const User = require("../models/user.model");
-const { updateAdminOrderStatus } = require("../services/order.service");
+// const { updateAdminOrderStatus } = require("../services/order.service");
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -186,68 +186,61 @@ const allowedStatus = [
   "cancelled",
   "returned",
 ];
-
 const updateOrderStatus = async (req, res) => {
-
   try {
-
     const { status, adminNote } = req.body;
 
     if (!allowedStatus.includes(status)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid order status"
+        message: "Invalid order status",
       });
     }
 
+    const order = await Order.findById(req.params.id);
 
-        const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
 
-        if(!order){
+    order.status = status;
 
-            return res.status(404).json({
-                success:false,
-                message:"Order not found"
-            });
+    if (adminNote) {
+      order.adminNote = adminNote;
+    }
 
-        }
+    if (status === "delivered") {
+      order.deliveredAt = new Date();
+    }
 
-        order.status = status;
+    if (status === "cancelled") {
+      order.cancelledAt = new Date();
+    }
 
-        if(adminNote){
-            order.adminNote = adminNote;
-        }
+    await order.save();
 
-        if(status==="delivered"){
-            order.deliveredAt = new Date();
-        }
-
-        if(status==="cancelled"){
-            order.cancelledAt = new Date();
-        }
-
-        await order.save();
-
-    const order = await updateAdminOrderStatus(req.params.id, status, adminNote);
-
+    // Keep your notification logic
+    const updatedOrder = await updateAdminOrderStatus(
+      req.params.id,
+      status,
+      adminNote
+    );
 
     res.status(200).json({
       success: true,
       message: "Order updated successfully",
-      order
+      order: updatedOrder,
     });
-
   } catch (error) {
-
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
-
   }
-
-}
-
+};
 
 const getOrderById = async (req, res) => {
   try {

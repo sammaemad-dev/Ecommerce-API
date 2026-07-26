@@ -9,6 +9,7 @@ const {
 
 const inventoryService = require("./inventory.service");
 const { addOrderHistory } = require("./history.service");
+const notificationService = require("./notification.service");
 
 // Create a new order from active cart
 const createOrder = async (
@@ -86,9 +87,26 @@ const createOrder = async (
     session.endSession();
 
     // Send confirmation email outside transaction to avoid coupling
-    await sendOrderConfirmation(order);
+   // Create notification
+try {
+  await notificationService.createNotification(
+    order.user,
+    "Order Created",
+    "Your order has been placed successfully.",
+    "order"
+  );
+} catch (err) {
+  console.error("Notification Error:", err.message);
+}
 
-    return order;
+// Send confirmation email
+try {
+  await sendOrderConfirmation(order);
+} catch (err) {
+  console.error("Email Error:", err.message);
+}
+
+return order;
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
@@ -138,9 +156,25 @@ const payOrderWithCash = async (userId, orderId) => {
   // Add history record for status change
   await addOrderHistory(order, "confirmed", null, "Cash payment completed");
 
-  await sendPaymentConfirmation(order);
   await order.save();
 
+  try {
+    await notificationService.createNotification(
+      order.user,
+      "Payment Successful",
+      "Your payment has been received successfully.",
+      "payment"
+    );
+  } catch (err) {
+    console.error("Notification Error:", err.message);
+  }
+  
+  try {
+    await sendPaymentConfirmation(order);
+  } catch (err) {
+    console.error("Email Error:", err.message);
+  }
+  
   return order;
 };
 
@@ -176,8 +210,20 @@ async function cancelOrder(userId, orderId) {
 
     await session.commitTransaction();
     session.endSession();
-
+    
+    try {
+      await notificationService.createNotification(
+        order.user,
+        "Order Cancelled",
+        "Your order has been cancelled.",
+        "order"
+      );
+    } catch (err) {
+      console.error("Notification Error:", err.message);
+    }
+    
     return order;
+
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
@@ -218,9 +264,20 @@ const updateAdminOrderStatus = async (orderId, newStatus, adminNote) => {
     await addOrderHistory(order, newStatus, null, note);
   }
 
-  await order.save();
+ await order.save();
 
-  return order;
+try {
+  await notificationService.createNotification(
+    order.user,
+    "Order Updated",
+    `Your order status has been updated to ${newStatus}.`,
+    "order"
+  );
+} catch (err) {
+  console.error("Notification Error:", err.message);
+}
+
+return order;
 };
 
 module.exports = {
