@@ -96,15 +96,13 @@ const productSchema = new mongoose.Schema(
       },
     },
     category: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
       required: true,
-      lowercase: true,
-      trim: true,
     },
-    subcategory: {
-      type: String,
-      lowercase: true,
-      trim: true,
+    subCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SubCategory",
     },
     brand: {
       type: String,

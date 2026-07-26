@@ -8,7 +8,6 @@ const {
 
 const inventoryService = require("./inventory.service");
 
-
 // Create a new order from active cart
 const createOrder = async (
   userId,
@@ -55,7 +54,6 @@ const createOrder = async (
     customerNote,
   });
 
-
   // Update inventory in bulk
   const bulkOps = cart.items.map((item) => ({
     updateOne: {
@@ -63,12 +61,11 @@ const createOrder = async (
       update: { $inc: { stock: -item.quantity } },
     },
   }));
-  await Product.bulkWrite(bulkOps);
+  await Product.bulkWrite(bulkOps); //bulkWrite send all updates(bultOperations) in one request (faster) , updateOne send each update in seperate request
 
   for (const item of order.items) {
     await inventoryService.deductStock(item.product, item.quantity);
   }
-
 
   // Clear the user's cart
   cart.items = [];
@@ -158,7 +155,5 @@ module.exports = {
   getUserOrders,
   payOrderWithCash,
 
-
   cancelOrder,
-
 };
