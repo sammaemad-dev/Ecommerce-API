@@ -60,6 +60,19 @@ const createStripeCheckoutSession = asyncHandler(async (req, res) => {
   });
 });
 
+const createStripePaymentIntent = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { orderId } = req.validatedData;
+
+  const payment = await paymentService.createStripePaymentIntent(userId, orderId);
+
+  res.status(200).json({
+    success: true,
+    message: "Stripe payment intent created successfully.",
+    data: payment,
+  });
+});
+
 const verifyStripeCheckoutSession = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
   const { orderId, sessionId } = req.validatedData;
@@ -82,5 +95,6 @@ module.exports = {
   getUserOrders,
   payOrderWithCash,
   createStripeCheckoutSession,
+  createStripePaymentIntent,
   verifyStripeCheckoutSession,
 };
