@@ -13,7 +13,7 @@ const getCart = asyncHandler(async (req, res) => {
 
 const addItem = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
-  const { productId, quantity } = req.body;
+  const { productId, quantity } = req.validatedData;
 
   const cart = await cartServices.addItem(userId, productId, quantity);
 
@@ -26,7 +26,7 @@ const addItem = asyncHandler(async (req, res) => {
 
 const updateItemQuantity = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
-  const { productId, quantity } = req.body;
+  const { productId, quantity } = req.validatedData;
 
   const cart = await cartServices.updateItemQuantity(
     userId,
@@ -42,7 +42,7 @@ const updateItemQuantity = asyncHandler(async (req, res) => {
 });
 
 const removeItem = asyncHandler(async (req, res) => {
-  const { productId } = req.params;
+  const { productId } = req.validatedData;
   const userId = req.user?._id;
   const cart = await cartServices.removeItem(userId, productId);
 
@@ -55,7 +55,7 @@ const removeItem = asyncHandler(async (req, res) => {
 
 const applyCoupon = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
-  const { code, discountType, discountValue } = req.body;
+  const { code, discountType, discountValue } = req.validatedData;
   const cart = await cartServices.applyCoupon(
     userId,
     code,

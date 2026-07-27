@@ -52,6 +52,7 @@ const productSchema = new mongoose.Schema(
       min: 0,
       required: true,
     },
+    embedding:[Number],
     discountPrice: {
       type: Number,
       default: 0,
@@ -96,15 +97,13 @@ const productSchema = new mongoose.Schema(
       },
     },
     category: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
       required: true,
-      lowercase: true,
-      trim: true,
     },
-    subcategory: {
-      type: String,
-      lowercase: true,
-      trim: true,
+    subCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SubCategory",
     },
     brand: {
       type: String,

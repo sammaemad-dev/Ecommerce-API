@@ -11,7 +11,7 @@ const REFRESH_TOKEN_EXPIRY = "7d";
 const RESET_TOKEN_EXPIRY = "15m";
 
 function hashToken(token) {
-  return crypto.createHash("sha256").update(token).digest("hex");
+  return crypto.createHash("sha256").update(token).digest("hex"); //output (64 hexadecimal characters)
 }
 
 async function generateTokens(userId) {

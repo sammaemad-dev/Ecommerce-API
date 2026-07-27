@@ -7,7 +7,8 @@ const validate = (schema) => {
     };
     const { error, value } = schema.validate(inputs, {
       abortEarly: false,
-      stripUnknown: true, //remove unknow, not required fields
+      // stripUnknown: true, //remove unknown, not required fields and save to db without throwing error
+      allowUnknown: false, //throw error if there is  unknown, not required fields
     });
 
     if (error) {

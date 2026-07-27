@@ -1,11 +1,13 @@
 const Product = require("../models/product.model");
+const Category = require("../models/category.model");
+const SubCategory = require("../models/subCategory.model");
 const ApiFeatures = require("../utils/apiFeatures");
 const {
   uploadToCloudinary,
   deleteFromCloudinary,
 } = require("../utils/cloudinaryUtils");
-const redisClient = require("../config/redis");
-const { json } = require("express");
+const { getEmbedding } = require("../utils/embedding");
+
 function createError(message, statusCode) {
   const error = new Error(message);
   error.statusCode = statusCode;
@@ -14,15 +16,40 @@ function createError(message, statusCode) {
 
 async function createProduct(data, files, userId) {
   const payload = { ...data, createdBy: userId || data.createdBy };
+  const categoryId = payload.category;
+  const subCategoryId = payload.subCategory;
 
   if (
     !payload.name ||
     !payload.shortDescription ||
     !payload.description ||
     payload.price === undefined ||
-    payload.stock === undefined
+    payload.stock === undefined ||
+    payload.category === undefined
   ) {
     throw createError("Missing required product fields", 400);
+  }
+
+  const textForEmbedding = `${payload.name} ${payload.category} ${payload.description}`;
+  const embedding = await getEmbedding(textForEmbedding);
+
+  payload.embedding = embedding;
+
+  const category = await Category.findById(categoryId);
+  if (!category) {
+    throw createError("Category not found.", 404);
+  }
+  if (subCategoryId) {
+    const subCategory = await SubCategory.findById(subCategoryId);
+    if (!subCategory) {
+      throw createError("Subcategory not found.", 404);
+    }
+    if (!subCategory.category.equals(category._id)) {
+      throw createError(
+        "Subcategory does not belong to the selected category.",
+        400,
+      );
+    }
   }
 
   if (files && files.length > 0) {
@@ -50,13 +77,23 @@ async function createProduct(data, files, userId) {
 }
 
 async function getAllProducts(query) {
-  const productCount = await Product.countDocuments({ isActive: true });
-  const features = new ApiFeatures(Product.find({ isActive: true }), query)
+  // const productCount = await Product.countDocuments({ isActive: true });
+  const features = new ApiFeatures(
+    Product.find({ isActive: true })
+      .populate("category", "name")
+      .populate("subCategory", "name"),
+    query,
+  )
     .filter()
     .sort()
     .limitFields()
-    .search(["name"])
-    .pagination(productCount);
+    .search(["name", "brand", "description"]);
+  // .pagination(productCount);
+
+  const filteredQuery = features.mongooseQuery.clone(); //Aya : counting after filtering
+  const productCount = await filteredQuery.countDocuments();
+
+  features.pagination(productCount);
 
   const products = await features.mongooseQuery;
   return {
@@ -66,27 +103,6 @@ async function getAllProducts(query) {
   };
 }
 
-async function getProductById(productId) {
-  const cached = redisClient.get(`product:${productId}`);
-
-  if (cached) {
-    console.log("🔥 Cache HIT");
-    return JSON.parse(cached);
-  }
-
-  const product = await Product.findById(productId);
-
-  if (!product) {
-    throw createError("Product not found", 404);
-  }
-
-  await redisClient.set(`product:${productId}`, JSON.stringify(product), {
-    EX: 300,
-  });
-
-  return product;
-}
-
 async function updateProduct(productId, data, files) {
   const product = await Product.findById(productId);
   if (!product) {
@@ -94,6 +110,34 @@ async function updateProduct(productId, data, files) {
   }
 
   const payload = { ...data };
+  const categoryId = payload.category || product.category;
+  const subCategoryId = payload.subCategory || product.subCategory;
+
+  const category = await Category.findById(categoryId);
+
+  if (!category) {
+    throw createError("Category not found.", 404);
+  }
+
+  if (subCategoryId) {
+    const subCategory = await SubCategory.findById(subCategoryId);
+
+    if (!subCategory) {
+      throw createError("Subcategory not found.", 404);
+    }
+    if (!subCategory.category.equals(categoryId)) {
+      throw createError(
+        "Subcategory does not belong to the selected category.",
+        400,
+      );
+    }
+  }
+
+  if (payload.name || payload.category || payload.description) {
+    const textForEmbedding = `${payload.name || product.name} ${payload.category || product.category} ${payload.description || product.description}`;
+    const embedding = await getEmbedding(textForEmbedding);
+    payload.embedding = embedding;
+  }
 
   if (files && files.length > 0) {
     const uploadedImages = [];
@@ -138,6 +182,17 @@ async function updateProduct(productId, data, files) {
   return product;
 }
 
+async function getProductById(productId) {
+  const product = await Product.findById(productId)
+    .populate("category", "name")
+    .populate("subCategory", "name");
+  if (!product) {
+    throw createError("Product not found", 404);
+  }
+
+  return product;
+}
+
 async function deleteProduct(productId) {
   const product = await Product.findById(productId);
   if (!product) {
@@ -157,7 +212,8 @@ async function deleteProduct(productId) {
     }
   }
 
-  await Product.findByIdAndDelete(productId);
+  // await Product.findByIdAndDelete(productId);
+  await product.deleteOne(); //aya: better than findByIdAndDelete to avoid mongoose performs another query
 }
 
 module.exports = {

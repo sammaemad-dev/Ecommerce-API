@@ -195,6 +195,64 @@ const getSalesSummary = async () => {
 };
 
 
+const getMoMRevenueGrowth = async () => {
+  const now = new Date();
+  
+  const startOfPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const endOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+  const stats = await Order.aggregate([
+    {
+      $match: {
+        paymentStatus: "paid",
+        status: { $ne: "cancelled" },
+        paidAt: { $gte: startOfPreviousMonth, $lte: endOfCurrentMonth },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          year: { $year: "$paidAt" },
+          month: { $month: "$paidAt" },
+        },
+        revenue: { $sum: "$totalPrice" },
+      },
+    },
+  ]);
+
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; 
+
+  const previousDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const previousYear = previousDate.getFullYear();
+  const previousMonth = previousDate.getMonth() + 1;
+
+  let currentMonthRevenue = 0;
+  let previousMonthRevenue = 0;
+
+  stats.forEach((item) => {
+    if (item._id.year === currentYear && item._id.month === currentMonth) {
+      currentMonthRevenue = item.revenue;
+    } else if (item._id.year === previousYear && item._id.month === previousMonth) {
+      previousMonthRevenue = item.revenue;
+    }
+  });
+
+  let percentageGrowth = 0;
+  if (previousMonthRevenue > 0) {
+    percentageGrowth = ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100;
+  } else if (currentMonthRevenue > 0) {
+    percentageGrowth = 100; 
+  }
+
+  return {
+    previousMonthRevenue: Number(previousMonthRevenue.toFixed(2)),
+    currentMonthRevenue: Number(currentMonthRevenue.toFixed(2)),
+    percentageGrowth: Number(percentageGrowth.toFixed(2)),
+  };
+};
+
+
 const getDashboardAnalytics = async () => {
   const [
     revenueStatistics,
@@ -202,12 +260,14 @@ const getDashboardAnalytics = async () => {
     topSellingProducts,
     ordersCount,
     salesSummary,
+    momRevenueGrowth,
   ] = await Promise.all([
     getRevenueStatistics(),
     getOrdersAnalytics(),
     getTopSellingProducts(5),
     getOrdersCount(),
     getSalesSummary(),
+    getMoMRevenueGrowth(),
   ]);
 
   return {
@@ -216,9 +276,11 @@ const getDashboardAnalytics = async () => {
     ordersCount,
     topSellingProducts,
     salesSummary,
+    momRevenueGrowth,
   };
 };
 
 module.exports = {
   getDashboardAnalytics,
 };
+

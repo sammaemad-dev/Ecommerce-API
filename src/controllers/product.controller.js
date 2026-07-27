@@ -5,7 +5,7 @@ const productService = require("../services/product.service");
 
 const createProduct = asyncHandler(async (req, res) => {
   const result = await productService.createProduct(
-    req.validatedData || req.body,
+    req.validatedData,
     req.files,
     req.user?._id,
   );
@@ -18,17 +18,18 @@ const createProduct = asyncHandler(async (req, res) => {
 });
 
 const getAllProducts = asyncHandler(async (req, res) => {
-  const result = await productService.getAllProducts(req.query);
+  const result = await productService.getAllProducts(req.validatedData);
 
   res.status(200).json({
     success: true,
     message: "Products retrieved successfully",
-    data: result,
+    // data: result,
+    ...result, //to merge properties of the object without nesting it under another data key
   });
 });
 
 const getProductById = asyncHandler(async (req, res) => {
-  const result = await productService.getProductById(req.params.id);
+  const result = await productService.getProductById(req.validatedData.id);
 
   res.status(200).json({
     success: true,
@@ -38,11 +39,8 @@ const getProductById = asyncHandler(async (req, res) => {
 });
 
 const updateProduct = asyncHandler(async (req, res) => {
-  const result = await productService.updateProduct(
-    req.params.id,
-    req.validatedData || req.body,
-    req.files,
-  );
+  const { id, ...updateData } = req.validatedData;
+  const result = await productService.updateProduct(id, updateData, req.files);
 
   res.status(200).json({
     success: true,
@@ -52,7 +50,7 @@ const updateProduct = asyncHandler(async (req, res) => {
 });
 
 const deleteProduct = asyncHandler(async (req, res) => {
-  await productService.deleteProduct(req.params.id);
+  await productService.deleteProduct(req.validatedData.id);
 
   res.status(200).json({
     success: true,
