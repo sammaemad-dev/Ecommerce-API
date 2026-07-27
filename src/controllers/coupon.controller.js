@@ -34,8 +34,8 @@ const getCouponById = asyncHandler(async (req, res) => {
 });
 
 const updateCoupon = asyncHandler(async (req, res) => {
-  const id = req.validatedData.id;
-  const coupon = await couponService.updateCoupon(id, req.validatedData);
+  const { id, ...updateData } = req.validatedData;
+  const coupon = await couponService.updateCoupon(id, updateData);
 
   res.status(200).json({
     success: true,
@@ -45,7 +45,7 @@ const updateCoupon = asyncHandler(async (req, res) => {
 });
 
 const deleteCoupon = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const id = req.validatedData.id;
   await couponService.deleteCoupon(id);
 
   res.status(200).json({

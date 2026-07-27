@@ -165,7 +165,8 @@ const stripeVerifyValidation = Joi.object({
 // };
 
 const searchOrdersValidation = Joi.object({
-  keyword: Joi.string().trim().min(1).required().messages({
+  //aya: update the previous one
+  search: Joi.string().trim().min(1).required().messages({
     "any.required": "Search keyword is required.",
     "string.empty": "Search keyword is required.",
     "string.min": "Search keyword cannot be empty.",
