@@ -7,6 +7,7 @@ const {
   deleteFromCloudinary,
 } = require("../utils/cloudinaryUtils");
 const { getEmbedding } = require("../utils/embedding");
+const redisClient = require("../config/redis");
 
 function createError(message, statusCode) {
   const error = new Error(message);
@@ -179,17 +180,26 @@ async function updateProduct(productId, data, files) {
 
   Object.assign(product, payload);
   await product.save();
+  await redisClient.del(`product:${productId}`);
   return product;
 }
 
 async function getProductById(productId) {
+  const cached = await redisClient.get(`product:${productId}`);
+  if (cached) {
+    console.log("cache HIT!!!");
+    return JSON.parse(cached);
+  }
+  console.log("cache MISS :(");
   const product = await Product.findById(productId)
     .populate("category", "name")
     .populate("subCategory", "name");
   if (!product) {
     throw createError("Product not found", 404);
   }
-
+  await redisClient.set(`product:${productId}`, JSON.stringify(product), {
+    EX: 300,
+  });
   return product;
 }
 
@@ -214,6 +224,7 @@ async function deleteProduct(productId) {
 
   // await Product.findByIdAndDelete(productId);
   await product.deleteOne(); //aya: better than findByIdAndDelete to avoid mongoose performs another query
+  await redisClient.del(`product:${productId}`);
 }
 
 module.exports = {
