@@ -1,7 +1,11 @@
 const Product = require("../models/product.model");
 const ApiFeatures = require("../utils/apiFeatures");
-const { uploadToCloudinary, deleteFromCloudinary } = require("../utils/cloudinaryUtils");
-
+const {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} = require("../utils/cloudinaryUtils");
+const redisClient = require("../config/redis");
+const { json } = require("express");
 function createError(message, statusCode) {
   const error = new Error(message);
   error.statusCode = statusCode;
@@ -11,7 +15,13 @@ function createError(message, statusCode) {
 async function createProduct(data, files, userId) {
   const payload = { ...data, createdBy: userId || data.createdBy };
 
-  if (!payload.name || !payload.shortDescription || !payload.description || payload.price === undefined || payload.stock === undefined) {
+  if (
+    !payload.name ||
+    !payload.shortDescription ||
+    !payload.description ||
+    payload.price === undefined ||
+    payload.stock === undefined
+  ) {
     throw createError("Missing required product fields", 400);
   }
 
@@ -42,11 +52,11 @@ async function createProduct(data, files, userId) {
 async function getAllProducts(query) {
   const productCount = await Product.countDocuments({ isActive: true });
   const features = new ApiFeatures(Product.find({ isActive: true }), query)
-  .filter()
-  .sort()
-  .limitFields()
-  .search(["name"])
-  .pagination(productCount);
+    .filter()
+    .sort()
+    .limitFields()
+    .search(["name"])
+    .pagination(productCount);
 
   const products = await features.mongooseQuery;
   return {
@@ -57,11 +67,22 @@ async function getAllProducts(query) {
 }
 
 async function getProductById(productId) {
+  const cached = redisClient.get(`product:${productId}`);
+
+  if (cached) {
+    console.log("🔥 Cache HIT");
+    return JSON.parse(cached);
+  }
+
   const product = await Product.findById(productId);
 
   if (!product) {
     throw createError("Product not found", 404);
   }
+
+  await redisClient.set(`product:${productId}`, JSON.stringify(product), {
+    EX: 300,
+  });
 
   return product;
 }
@@ -103,7 +124,10 @@ async function updateProduct(productId, data, files) {
         try {
           await deleteFromCloudinary(image.public_id);
         } catch (err) {
-          console.warn(`Could not delete old image ${image.public_id} from Cloudinary:`, err.message);
+          console.warn(
+            `Could not delete old image ${image.public_id} from Cloudinary:`,
+            err.message,
+          );
         }
       }
     }
@@ -125,7 +149,10 @@ async function deleteProduct(productId) {
       try {
         await deleteFromCloudinary(image.public_id);
       } catch (err) {
-        console.warn(`Could not delete image ${image.public_id} from Cloudinary:`, err.message);
+        console.warn(
+          `Could not delete image ${image.public_id} from Cloudinary:`,
+          err.message,
+        );
       }
     }
   }
