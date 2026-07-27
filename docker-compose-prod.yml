@@ -1,0 +1,5 @@
+services:
+  ec-app:
+    build: .
+    command: npm start
+    

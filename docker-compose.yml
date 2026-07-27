@@ -1,0 +1,22 @@
+services:
+  ec-app:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./.env
+    command: npm run dev
+    environment:
+      -  MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongo:27017/ecommerce?authSource=admin
+    depends_on:
+      - mongo
+  mongo:
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
