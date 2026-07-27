@@ -1,10 +1,9 @@
 const Joi = require("joi");
 const addressSchema = require("./address.validation");
+const objectId = require("./objectId.validation");
 
-const orderIdSchema = Joi.string().trim().hex().length(24).required().messages({
+const orderIdSchema = Joi.string().custom(objectId).required().messages({
   "string.empty": "Order ID is required.",
-  "string.hex": "Order ID must be a valid hexadecimal value.",
-  "string.length": "Order ID must be exactly 24 characters long.",
   "any.required": "Order ID is required.",
 });
 
@@ -75,6 +74,9 @@ const adminOrdersFilterValidation = Joi.object({
   paymentStatus: Joi.string()
     .valid("pending", "paid", "failed", "refunded")
     .optional(),
+  paymentMethod: Joi.string().valid("cash", "stripe").optional(),
+
+  user: Joi.string().custom(objectId).optional(),
   sort: Joi.string().valid("asc", "desc").optional(),
   startDate: Joi.date().optional(),
   endDate: Joi.date().optional(),
@@ -85,10 +87,20 @@ const exportOrdersValidation = Joi.object({
     "any.only": "Export format must be either 'csv' or 'xlsx'.",
   }),
   status: Joi.string()
-    .valid("pending","confirmed","processing","shipped","delivered","cancelled","returned")
+    .valid(
+      "pending",
+      "confirmed",
+      "processing",
+      "shipped",
+      "delivered",
+      "cancelled",
+      "returned",
+    )
     .optional(),
-  paymentStatus: Joi.string().valid("pending", "paid", "failed", "refunded").optional(),
-  paymentMethod: Joi.string().valid("cash", "stripe", "paypal", "paymob").optional(),
+  paymentStatus: Joi.string()
+    .valid("pending", "paid", "failed", "refunded")
+    .optional(),
+  paymentMethod: Joi.string().valid("cash", "stripe").optional(),
   startDate: Joi.date().optional(),
   endDate: Joi.date().optional(),
 });

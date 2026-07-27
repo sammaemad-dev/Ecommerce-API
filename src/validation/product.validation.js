@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const objectId = require("./objectId.validation");
 
 const createProductValidation = Joi.object({
   name: Joi.string().trim().max(200).required().messages({
@@ -35,12 +36,13 @@ const createProductValidation = Joi.object({
 
   sku: Joi.string().trim().optional(),
 
-  category: Joi.string().trim().lowercase().required().messages({
+  category: Joi.string().custom(objectId).required().messages({
+    //aya : make category model instead of string
     "string.empty": "Category is required.",
     "any.required": "Category is required.",
   }),
 
-  subcategory: Joi.string().trim().lowercase().optional(),
+  subCategory: Joi.string().custom(objectId).optional(), //aya : make subCategory model instead of string
 
   brand: Joi.string().trim().optional(),
 
@@ -50,10 +52,11 @@ const createProductValidation = Joi.object({
 
   isActive: Joi.boolean().default(true),
 
-  createdBy: Joi.string().hex().length(24).optional(),
+  // createdBy: Joi.string().custom(objectId).optional(),
 });
 
 const updateProductValidation = Joi.object({
+  id: Joi.string().custom(objectId).optional(),
   name: Joi.string().trim().max(200).optional(),
 
   shortDescription: Joi.string().trim().max(500).optional(),
@@ -68,9 +71,9 @@ const updateProductValidation = Joi.object({
 
   sku: Joi.string().trim().optional(),
 
-  category: Joi.string().trim().lowercase().optional(),
+  category: Joi.string().custom(objectId).optional(), //aya : make category model instead of string
 
-  subcategory: Joi.string().trim().lowercase().optional(),
+  subCategory: Joi.string().custom(objectId).optional(), //aya : make subCategory model instead of string
 
   brand: Joi.string().trim().optional(),
 
@@ -80,17 +83,36 @@ const updateProductValidation = Joi.object({
 
   isActive: Joi.boolean().optional(),
 
-  createdBy: Joi.string().hex().length(24).optional(),
-}).min(1).messages({
-  "object.min": "At least one field must be provided to update the product.",
-});
+  // createdBy: Joi.string().custom(objectId).optional(),  //not prefered to be added
+})
+  .min(1)
+  .messages({
+    "object.min": "At least one field must be provided to update the product.",
+  });
 
 const productIdParamValidation = Joi.object({
-  id: Joi.string().hex().length(24).required().messages({
+  id: Joi.string().custom(objectId).required().messages({
     "string.empty": "Product ID is required.",
-    "string.hex": "Product ID must be a valid 24-character hexadecimal string.",
-    "string.length": "Product ID must be exactly 24 characters long.",
     "any.required": "Product ID is required.",
+  }),
+});
+
+const getProductsValidation = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10),
+  search: Joi.string().trim().optional(),
+  sort: Joi.string().optional(),
+  fields: Joi.string().optional(),
+  brand: Joi.string().trim().optional(), //aya: filter by brand
+  "price[gte]": Joi.number().optional(), //aya: filter by price
+  "price[gt]": Joi.number().optional(),
+  "price[lte]": Joi.number().optional(),
+  "price[lt]": Joi.number().optional(),
+  category: Joi.string().custom(objectId).optional().messages({
+    "any.invalid": "Invalid category ID.",
+  }),
+  subCategory: Joi.string().custom(objectId).optional().messages({
+    "any.invalid": "Invalid subcategory ID.",
   }),
 });
 
@@ -98,4 +120,5 @@ module.exports = {
   createProductValidation,
   updateProductValidation,
   productIdParamValidation,
+  getProductsValidation,
 };

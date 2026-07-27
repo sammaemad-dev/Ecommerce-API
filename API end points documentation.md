@@ -1,6 +1,7 @@
 ### APIs end points docs
 
 # 1 - Check live server
+
 method : GET
 url : http://localhost:3000/
 

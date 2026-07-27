@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const objectId = require("./objectId.validation")
 
 const createCouponValidation = Joi.object({
   code: Joi.string().trim().uppercase().min(3).max(30).required().messages({
@@ -53,7 +54,7 @@ const applyCouponValidation = Joi.object({
 });
 
 const couponIdParamValidation = Joi.object({
-  id: Joi.string().hex().length(24).required().messages({
+  id: Joi.string().custom(objectId).required().messages({
     "string.empty": "Coupon ID is required.",
     "string.hex": "Coupon ID must be a valid 24-character hexadecimal string.",
     "string.length": "Coupon ID must be exactly 24 characters long.",

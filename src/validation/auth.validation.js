@@ -36,7 +36,10 @@ const registerValidation = Joi.object({
       "string.empty": "Password is required.",
       "any.required": "Password is required.",
     }),
-
+  confirmPassword: Joi.string().valid(Joi.ref("password")).required().messages({
+    "any.only": "Passwords do not match.",
+    "any.required": "Confirm password is required.",
+  }),
   phone: Joi.string()
     .trim()
     .pattern(/^01[0125]\d{8}$/)
@@ -81,12 +84,9 @@ const resetPasswordValidation = Joi.object({
         "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
     }),
 
-  confirmPassword: Joi.string()
-    .valid(Joi.ref("password"))
-    .required()
-    .messages({
-      "any.only": "Passwords do not match.",
-    }),
+  confirmPassword: Joi.string().valid(Joi.ref("password")).required().messages({
+    "any.only": "Passwords do not match.",
+  }),
 });
 
 module.exports = {
