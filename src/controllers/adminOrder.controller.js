@@ -1,11 +1,12 @@
 const Order = require("../models/order.model");
 const User = require("../models/user.model");
+const { updateAdminOrderStatus } = require("../services/order.service");
 const getAllOrders = async (req, res) => {
   try {
-    
+   const { page, limit } = req.validatedData;
     const orders = await Order.find()
-      .populate("user", "firstName lastName email")
-      .populate("items.product", "title price images")
+      .populate("user", "username email")
+      .populate("items.product", "name price images")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
@@ -22,6 +23,7 @@ const getAllOrders = async (req, res) => {
     });
   }
 };
+
 
 const filterOrders = async (req, res) => {
   try {
@@ -52,14 +54,14 @@ const filterOrders = async (req, res) => {
       }
     }
     const orders = await Order.find(filter)
-      .populate("user", "firstName lastName email")
-      .sort({ createdAt: sort === "asc" ? 1 : -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
+    .populate("user", "username email")
+    .populate("items.product", "name price images")
+     .sort({ createdAt: sort === "asc" ? 1 : -1 })
+     .skip((page - 1) * limit)
+     .limit(limit);
 
     const totalOrders = await Order.countDocuments(filter);
-
-    res.status(200).json({
+   res.status(200).json({
       success: true,
       count: orders.length,
       totalOrders,
@@ -73,103 +75,42 @@ const filterOrders = async (req, res) => {
   }
 };
 
-// const searchOrders = async (req, res) => {
-//   try {
-
-//     const keyword = req.query.keyword?.trim();
-
-//     if (!keyword) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Search keyword is required",
-//       });
-//     }
-
-//     const orders = await Order.find({
-//       $or: [
-//         {
-//           "shippingAddress.fullName": {
-//             $regex: keyword,
-//             $options: "i",
-//           },
-//         },
-//         {
-//           "shippingAddress.phone": {
-//             $regex: keyword,
-//             $options: "i",
-//           },
-//         },
-//       ],
-//     }).populate({
-//       path: "user",
-//       match: {
-//         $or: [
-//           { firstName: { $regex: keyword, $options: "i" } },
-//           { lastName: { $regex: keyword, $options: "i" } },
-//           { email: { $regex: keyword, $options: "i" } },
-//         ],
-//       },
-//     });
-
-//     const result = orders.filter(
-//       order =>
-//         order.user ||
-//         order.shippingAddress.fullName
-//           .toLowerCase()
-//           .includes(keyword.toLowerCase()) ||
-//         order.shippingAddress.phone.includes(keyword)
-//     );
-
-//     res.status(200).json({
-//       success: true,
-//       count: result.length,
-//       orders: result,
-//     });
-
-//   } catch (error) {
-
-//     res.status(500).json({
-//       success: false,
-//       message: error.message,
-//     });
-
-//   }
-// };
-
 const searchOrders = async (req, res) => {
   try {
     const { keyword } = req.validatedData;
 
-    // Find users matching the keyword
-    const users = await User.find({
+    const matchingUsers = await User.find({
       $or: [
-        { firstName: { $regex: keyword, $options: "i" } },
-        { lastName: { $regex: keyword, $options: "i" } },
+        { username: { $regex: keyword, $options: "i" } },
         { email: { $regex: keyword, $options: "i" } },
+        { phone: { $regex: keyword, $options: "i" } },
       ],
     }).select("_id");
 
-    const userIds = users.map((user) => user._id);
+    const userIds = matchingUsers.map(user => user._id);
 
-    // Search orders
-    const orders = await Order.find({
-      $or: [
-        { user: { $in: userIds } },
-        {
-          "shippingAddress.fullName": {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
-        {
-          "shippingAddress.phone": {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
-      ],
-    })
-      .populate("user", "firstName lastName email")
+    const orderSearchOr = [
+      { user: { $in: userIds } },
+      { "shippingAddress.fullName": { $regex: keyword, $options: "i" } },
+      { "shippingAddress.phone": { $regex: keyword, $options: "i" } },
+      { "shippingAddress.country": { $regex: keyword, $options: "i" } },
+      { "shippingAddress.city": { $regex: keyword, $options: "i" } },
+      { "shippingAddress.address": { $regex: keyword, $options: "i" } },
+      { transactionId: { $regex: keyword, $options: "i" } },
+      { status: { $regex: keyword, $options: "i" } },
+      { paymentMethod: { $regex: keyword, $options: "i" } },
+      { paymentStatus: { $regex: keyword, $options: "i" } },
+    ];
+
+    const mongoose = require("mongoose");
+
+    if (mongoose.isValidObjectId(keyword)) {
+      orderSearchOr.push({ _id: keyword });
+    }
+
+    const orders = await Order.find({ $or: orderSearchOr })
+      .populate("user", "username email phone")
+      .populate("items.product", "name price images")
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -177,6 +118,7 @@ const searchOrders = async (req, res) => {
       count: orders.length,
       orders,
     });
+ 
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -199,13 +141,6 @@ const updateOrderStatus = async (req, res) => {
   try {
     const { id, status, adminNote } = req.validatedData;
 
-    // if (!allowedStatus.includes(status)) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Invalid order status",
-    //   });
-    // }
-
     const order = await Order.findById(id);
 
     if (!order) {
@@ -215,26 +150,48 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
-    if (!allowedTransitions[order.status].includes(status)) {  // Prevent invalid status transitions
+    if (!allowedTransitions[order.status].includes(status)) {
       return res.status(400).json({
         success: false,
         message: `Cannot change order status from "${order.status}" to "${status}".`,
       });
     }
-    order.status = status;
-    if (adminNote) {
-      order.adminNote = adminNote;
-    }
-    if (status === "delivered" && !order.deliveredAt) {
-      order.deliveredAt = new Date();
-    }
-    if (status === "cancelled" && !order.cancelledAt) {
-      order.cancelledAt = new Date();
-    }
-    await order.save();
+
+    const updatedOrder = await updateAdminOrderStatus(
+      id,
+      status,
+      adminNote
+    );
+
     res.status(200).json({
       success: true,
       message: "Order updated successfully",
+      order: updatedOrder,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+const getOrderById = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const order = await Order.findById(orderId)
+      .populate("user", "username email phone")
+      .populate("items.product", "name price images");
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
       order,
     });
   } catch (error) {
@@ -245,9 +202,11 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+
 module.exports = {
   getAllOrders,
   filterOrders,
   searchOrders,
   updateOrderStatus,
+  getOrderById,
 };

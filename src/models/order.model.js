@@ -197,6 +197,39 @@ const orderSchema = new mongoose.Schema(
       maxlength: 1000,
       default: "",
     },
+
+    history: [
+      {
+        status: {
+          type: String,
+          enum: [
+            "pending",
+            "confirmed",
+            "processing",
+            "shipped",
+            "delivered",
+            "cancelled",
+            "returned",
+          ],
+          required: true,
+        },
+        changedAt: {
+          type: Date,
+          default: Date.now,
+        },
+        changedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          default: null,
+        },
+        note: {
+          type: String,
+          trim: true,
+          maxlength: 500,
+          default: "",
+        },
+      },
+    ],
   },
   {
     timestamps: true,
