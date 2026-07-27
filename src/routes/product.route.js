@@ -11,6 +11,7 @@ const {
   createProductValidation,
   updateProductValidation,
   productIdParamValidation,
+  getProductsValidation,
 } = require("../validation/product.validation");
 
 // Haidy: admin-only, private route
@@ -24,8 +25,16 @@ router.post(
 );
 
 // public routes
-router.get("/", productController.getAllProducts);
-router.get("/:id", validate(productIdParamValidation), productController.getProductById);
+router.get(
+  "/",
+  validate(getProductsValidation),
+  productController.getAllProducts,
+);
+router.get(
+  "/:id",
+  validate(productIdParamValidation),
+  productController.getProductById,
+);
 
 // Haidy: admin-only, private route
 router.put(

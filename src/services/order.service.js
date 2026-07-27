@@ -112,6 +112,7 @@ return order;
     session.endSession();
     throw err;
   }
+
 };
 
 // Retrieve user's order history

@@ -1,11 +1,34 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
+const cors = require("cors");
+const morgan = require("morgan");
 const app = express();
 
 // Haidy: all routes (auth/products/carts/wishlist/coupons) are collected
 // and exported from routes/index.js, mounted here under /api
 const routes = require("./routes/index");
 const paymentRoutes = require("./routes/payment.route");
+
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:3000")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
+
+app.use(morgan("dev"));
 
 app.use(
   "/api/webhooks",

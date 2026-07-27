@@ -73,12 +73,13 @@ async function markOrderPaid(order) {
   }
 
   order.paymentStatus = "paid";
+  order.paymentMethod = "stripe";
   order.status = "confirmed";
   order.paidAt = new Date();
-  
+
   // Add history record for status change
   await addOrderHistory(order, "confirmed", null, "Stripe payment completed");
-  
+
   await order.save();
 
   return order;
@@ -153,6 +154,40 @@ async function processCheckoutSessionPayment(session, order) {
   error.checkoutSessionStatus = session.status;
   error.checkoutPaymentStatus = session.payment_status;
   throw error;
+}
+
+async function createStripePaymentIntent(userId, orderId) {
+  const order = await getPayableStripeOrder(userId, orderId);
+  const currency = getStripeCurrency();
+  const amount = toStripeAmount(order.totalPrice);
+  const stripe = getStripeClient();
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,
+      currency,
+      metadata: {
+        orderId: order._id.toString(),
+        userId: userId.toString(),
+      },
+      automatic_payment_methods: {
+        enabled: true,
+      },
+    });
+
+    order.transactionId = paymentIntent.id;
+    order.paymentStatus = "pending";
+    await order.save();
+
+    return {
+      paymentIntentId: paymentIntent.id,
+      clientSecret: paymentIntent.client_secret,
+      amount: order.totalPrice,
+      currency,
+    };
+  } catch (error) {
+    throw handleStripeError(error);
+  }
 }
 
 async function createStripeCheckoutSession(
@@ -287,6 +322,39 @@ async function fulfillCheckoutSessionFromWebhook(session) {
   return order;
 }
 
+async function fulfillPaymentIntentFromWebhook(paymentIntent) {
+  const orderId = paymentIntent.metadata?.orderId;
+  if (!orderId) {
+    return null;
+  }
+
+  const order = await getStripeOrderByMetadata(orderId);
+  if (!order || order.paymentStatus === "paid") {
+    return order;
+  }
+
+  if (paymentIntent.status === "succeeded") {
+    order.transactionId = paymentIntent.id;
+    return markOrderPaid(order);
+  }
+
+  return order;
+}
+
+async function markPaymentIntentFailed(paymentIntent) {
+  const orderId = paymentIntent.metadata?.orderId;
+  if (!orderId) {
+    return null;
+  }
+
+  const order = await getStripeOrderByMetadata(orderId);
+  if (!order || order.paymentStatus !== "pending") {
+    return order;
+  }
+
+  return markOrderFailed(order);
+}
+
 async function handleStripeWebhook(rawBody, signature) {
   const stripe = getStripeClient();
 
@@ -313,6 +381,15 @@ async function handleStripeWebhook(rawBody, signature) {
   }
 
   switch (event.type) {
+    case "payment_intent.succeeded":
+      await fulfillPaymentIntentFromWebhook(event.data.object);
+      break;
+
+    case "payment_intent.payment_failed":
+    case "payment_intent.canceled":
+      await markPaymentIntentFailed(event.data.object);
+      break;
+
     case "checkout.session.completed":
       await fulfillCheckoutSessionFromWebhook(event.data.object);
       break;
@@ -344,6 +421,7 @@ async function markCheckoutSessionFailed(session) {
 
 module.exports = {
   createStripeCheckoutSession,
+  createStripePaymentIntent,
   verifyStripeCheckoutSession,
   handleStripeWebhook,
 };

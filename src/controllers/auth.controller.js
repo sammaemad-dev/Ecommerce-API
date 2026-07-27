@@ -4,7 +4,8 @@ const asyncHandler = require("express-async-handler");
 const authService = require("../services/auth.service");
 
 const register = asyncHandler(async (req, res) => {
-  const result = await authService.register(req.body);
+  const { confirmPassword, ...userData } = req.validatedData;
+  const result = await authService.register(userData);
 
   res.status(201).json({
     success: true,
@@ -14,7 +15,7 @@ const register = asyncHandler(async (req, res) => {
 });
 
 const verifyOTP = asyncHandler(async (req, res) => {
-  const result = await authService.verifyOTP(req.body);
+  const result = await authService.verifyOTP(req.validatedData);
 
   res.status(201).json({
     success: true,
@@ -24,7 +25,9 @@ const verifyOTP = asyncHandler(async (req, res) => {
 });
 
 const login = asyncHandler(async (req, res) => {
-  const { user, accessToken, refreshToken } = await authService.login(req.body);
+  const { user, accessToken, refreshToken } = await authService.login(
+    req.validatedData,
+  );
 
   res
     .cookie("refreshToken", refreshToken, {
@@ -87,7 +90,7 @@ const logout = asyncHandler(async (req, res) => {
 });
 
 const forgotPassword = asyncHandler(async (req, res) => {
-  const result = await authService.forgotPassword(req.body);
+  const result = await authService.forgotPassword(req.validatedData);
 
   res.status(200).json({
     success: true,
@@ -97,7 +100,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 });
 
 const resetPassword = asyncHandler(async (req, res) => {
-  await authService.resetPassword(req.body);
+  await authService.resetPassword(req.validatedData);
 
   res.status(200).json({
     success: true,
@@ -118,7 +121,10 @@ const getProfile = asyncHandler(async (req, res) => {
 
 // Haidy: Update Profile endpoint
 const updateProfile = asyncHandler(async (req, res) => {
-  const result = await authService.updateProfile(req.user._id, req.body);
+  const result = await authService.updateProfile(
+    req.user._id,
+    req.validatedData,
+  );
 
   res.status(200).json({
     success: true,
@@ -129,7 +135,10 @@ const updateProfile = asyncHandler(async (req, res) => {
 
 // Haidy: Change Password endpoint
 const changePassword = asyncHandler(async (req, res) => {
-  const result = await authService.changePassword(req.user._id, req.body);
+  const result = await authService.changePassword(
+    req.user._id,
+    req.validatedData,
+  );
 
   res.status(200).json({
     success: true,
