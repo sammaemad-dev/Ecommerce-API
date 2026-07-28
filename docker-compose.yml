@@ -19,5 +19,21 @@ services:
       - mongo_data:/data/db
   redis:
     image: redis
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    container_name: es-node
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.0
+    container_name: kibana-node
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://es:9200
+    depends_on:
+      - es
 volumes:
   mongo_data:
