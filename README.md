@@ -2,9 +2,22 @@
 
 - npm run dev
 
+# To start the project in dev mode (docker)
+
+- docker-compose -f docker-compose.yml -f docker-compose-dev.yml up -d --build
+
 # To start the project in production mode
 
 - npm start
+
+# To start the project in production mode (docker)
+
+- docker-compose -f docker-compose.yml -f docker-compose-prod.yml up -d --build
+
+# To turn down the container
+
+- docker-compose -f docker-compose.yml -f docker-compose-prod.yml down -v
+
 # E-Commerce Backend API
 
 RESTful E-Commerce API built with Node.js, Express, MongoDB, With JWT Authentication and Authorization.

@@ -5,7 +5,7 @@ const {
   uploadToCloudinary,
   deleteFromCloudinary,
 } = require("../utils/cloudinaryUtils");
-
+const redisClient = require("../config/redis");
 function createError(message, statusCode) {
   const error = new Error(message);
   error.statusCode = statusCode;
@@ -58,6 +58,10 @@ async function getAllSubCategories(query) {
 }
 
 async function getSubCategoryById(subCategoryId) {
+  const cached = await redisClient.get(`subCategory:${subCategoryId}`);
+  if (cached) {
+    return JSOM.parse(cached);
+  }
   const subCategory = await SubCategory.findById(subCategoryId).populate(
     "category",
     "name",
@@ -65,6 +69,11 @@ async function getSubCategoryById(subCategoryId) {
   if (!subCategory) {
     throw createError("Subcategory not found.", 404);
   }
+  await redisClient.set(
+    `subCategory:${subCategoryId}`,
+    JSON.stringify(subCategory),
+    { EX: 300 },
+  );
   return subCategory;
 }
 
@@ -104,6 +113,7 @@ async function updateSubCategory(subCategoryId, data, file) {
   }
   Object.assign(subCategory, payload);
   await subCategory.save();
+  await redisClient.del(`subCategory:${subCategoryId}`);
   return subCategory;
 }
 
@@ -123,6 +133,7 @@ async function deleteSubCategory(subCategoryId) {
     }
   }
   await subCategory.deleteOne();
+  await redisClient.del(`subCategory:${subCategoryId}`);
 }
 
 module.exports = {

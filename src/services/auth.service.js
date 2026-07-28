@@ -52,7 +52,7 @@ async function register(data) {
       502,
     );
   }
-
+  await removeCacheKey("dashboard");
   return { email };
 }
 
@@ -166,7 +166,10 @@ async function resetPassword(data) {
 
     const otpRecord = await OTP.findOne({ email });
     if (!otpRecord) {
-      throw createError("OTP not found or already used. Please request a new one.", 400);
+      throw createError(
+        "OTP not found or already used. Please request a new one.",
+        400,
+      );
     }
 
     if (otpRecord.expiresAt < new Date()) {
