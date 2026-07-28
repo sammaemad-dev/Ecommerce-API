@@ -10,6 +10,8 @@ const {
 const inventoryService = require("./inventory.service");
 const { addOrderHistory } = require("./history.service");
 const notificationService = require("./notification.service");
+const redisClient = require("../config/redis");
+const removeCacheKey = require("../utils/removeCacheKey");
 
 // Create a new order from active cart
 const createOrder = async (
@@ -62,6 +64,7 @@ const createOrder = async (
 
     // Add initial history record
     await addOrderHistory(order, "pending", null, "Order created");
+    await removeCacheKey("dashboard");
 
     await order.save({ session });
 
@@ -112,7 +115,6 @@ return order;
     session.endSession();
     throw err;
   }
-
 };
 
 // Retrieve user's order history
@@ -183,7 +185,9 @@ async function cancelOrder(userId, orderId) {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const order = await Order.findOne({ _id: orderId, user: userId }).session(session);
+    const order = await Order.findOne({ _id: orderId, user: userId }).session(
+      session,
+    );
 
     if (!order) {
       const error = new Error("Order not found.");
@@ -205,7 +209,12 @@ async function cancelOrder(userId, orderId) {
     order.cancelledAt = new Date();
 
     // Add history record for cancellation
-    await addOrderHistory(order, "cancelled", null, "Order cancelled by customer");
+    await addOrderHistory(
+      order,
+      "cancelled",
+      null,
+      "Order cancelled by customer",
+    );
 
     await order.save({ session });
 
@@ -261,7 +270,8 @@ const updateAdminOrderStatus = async (orderId, newStatus, adminNote) => {
 
   // Add history record if status changed
   if (statusChanged) {
-    const note = adminNote || `Order status changed from ${oldStatus} to ${newStatus}`;
+    const note =
+      adminNote || `Order status changed from ${oldStatus} to ${newStatus}`;
     await addOrderHistory(order, newStatus, null, note);
   }
 
@@ -278,7 +288,8 @@ try {
   console.error("Notification Error:", err.message);
 }
 
-return order;
+  await removeCacheKey("dashboard");
+  return order;
 };
 
 module.exports = {

@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
 
-// Haidy: single place that collects every route module and exports
-// them together, so app.js just mounts one router under /api
 const authRoutes = require("./auth.route");
 const productRoutes = require("./product.route");
 const categoryRoutes = require("./category.route");
@@ -16,6 +14,8 @@ const dashboardRoutes = require("./dashboard.route");
 const exportRoutes = require("./export.route");
 const searchRoutes = require("./search.route");
 const notificationRoutes = require("./notification.route");
+const adminCartRoutes = require("./adminCart.route");
+const adminWishlistRoutes = require("./adminWishlist.route");
 
 router.use("/admin/export", exportRoutes);
 router.use("/auth", authRoutes);
@@ -29,6 +29,8 @@ router.use("/orders", orderRoutes);
 // router.use("/api/admin/orders", adminOrderRoutes);
 router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/dashboard", dashboardRoutes);
+router.use("/admin/cart", adminCartRoutes);
+router.use("/admin/wishlists", adminWishlistRoutes);
 router.get("/search",searchRoutes);
 router.use("/notifications", notificationRoutes);
 module.exports = router;
