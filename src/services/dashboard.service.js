@@ -1,6 +1,10 @@
 const Order = require("../models/order.model");
-
+const redisClient = require("../config/redis");
 const getRevenueStatistics = async () => {
+  const cached = await redisClient.get(`dashboard`);
+  if (cached) {
+    return JSON.parse(cached);
+  }
   const stats = await Order.aggregate([
     {
       $match: {
@@ -33,7 +37,6 @@ const getRevenueStatistics = async () => {
   };
 };
 
-
 const getOrdersAnalytics = async () => {
   const stats = await Order.aggregate([
     {
@@ -62,7 +65,6 @@ const getOrdersAnalytics = async () => {
 
   return defaultStatusBreakdown;
 };
-
 
 const getTopSellingProducts = async (limit = 5) => {
   return await Order.aggregate([
@@ -107,7 +109,6 @@ const getTopSellingProducts = async (limit = 5) => {
   ]);
 };
 
-
 const getOrdersCount = async () => {
   const countStats = await Order.aggregate([
     {
@@ -129,9 +130,10 @@ const getOrdersCount = async () => {
   }
 
   const { totalOrders, deliveredOrders } = countStats[0];
-  const completedRate = totalOrders > 0
-    ? Number(((deliveredOrders / totalOrders) * 100).toFixed(2))
-    : 0;
+  const completedRate =
+    totalOrders > 0
+      ? Number(((deliveredOrders / totalOrders) * 100).toFixed(2))
+      : 0;
 
   return {
     totalOrders,
@@ -139,11 +141,10 @@ const getOrdersCount = async () => {
   };
 };
 
-
 const getSalesSummary = async () => {
   const end = new Date();
   const start = new Date();
-  start.setDate(start.getDate() - 6); 
+  start.setDate(start.getDate() - 6);
   start.setHours(0, 0, 0, 0);
 
   end.setHours(23, 59, 59, 999);
@@ -194,12 +195,23 @@ const getSalesSummary = async () => {
   return salesSummary;
 };
 
-
 const getMoMRevenueGrowth = async () => {
   const now = new Date();
-  
-  const startOfPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const endOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+  const startOfPreviousMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() - 1,
+    1,
+  );
+  const endOfCurrentMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
 
   const stats = await Order.aggregate([
     {
@@ -221,7 +233,7 @@ const getMoMRevenueGrowth = async () => {
   ]);
 
   const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1; 
+  const currentMonth = now.getMonth() + 1;
 
   const previousDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const previousYear = previousDate.getFullYear();
@@ -233,16 +245,21 @@ const getMoMRevenueGrowth = async () => {
   stats.forEach((item) => {
     if (item._id.year === currentYear && item._id.month === currentMonth) {
       currentMonthRevenue = item.revenue;
-    } else if (item._id.year === previousYear && item._id.month === previousMonth) {
+    } else if (
+      item._id.year === previousYear &&
+      item._id.month === previousMonth
+    ) {
       previousMonthRevenue = item.revenue;
     }
   });
 
   let percentageGrowth = 0;
   if (previousMonthRevenue > 0) {
-    percentageGrowth = ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100;
+    percentageGrowth =
+      ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) *
+      100;
   } else if (currentMonthRevenue > 0) {
-    percentageGrowth = 100; 
+    percentageGrowth = 100;
   }
 
   return {
@@ -252,8 +269,11 @@ const getMoMRevenueGrowth = async () => {
   };
 };
 
-
 const getDashboardAnalytics = async () => {
+  const cached = await redisClient.get(`dashboard`);
+  if (cached) {
+    return JSON.parse(cached);
+  }
   const [
     revenueStatistics,
     ordersAnalytics,
@@ -270,7 +290,7 @@ const getDashboardAnalytics = async () => {
     getMoMRevenueGrowth(),
   ]);
 
-  return {
+  let dashboardData = {
     revenueStatistics,
     ordersAnalytics,
     ordersCount,
@@ -278,9 +298,12 @@ const getDashboardAnalytics = async () => {
     salesSummary,
     momRevenueGrowth,
   };
+  await redisClient.set("dashboard", JSON.stringify(dashboardData), {
+    EX: 60,
+  });
+  return dashboardData;
 };
 
 module.exports = {
   getDashboardAnalytics,
 };
-

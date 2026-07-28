@@ -1,5 +1,5 @@
 const Coupon = require("../models/coupon.model");
-
+const redisClient = require("../config/redis");
 function createError(message, statusCode) {
   const error = new Error(message);
   error.statusCode = statusCode;
@@ -23,10 +23,17 @@ async function getCoupons() {
 }
 
 async function getCouponById(id) {
+  const cached = await redisClient(`coupon:${id}`);
+  if (cached) {
+    return JSON.parse(cached);
+  }
   const coupon = await Coupon.findById(id);
   if (!coupon) {
     throw createError("Coupon not found", 404);
   }
+  await redisClient.set(`coupon:${id}`, JSON.stringify(coupon), {
+    EX: 300,
+  });
   return coupon;
 }
 
@@ -48,7 +55,7 @@ async function updateCoupon(id, data) {
   if (!coupon) {
     throw createError("Coupon not found", 404);
   }
-
+  await redisClient.del(`coupon:${id}`);
   return coupon;
 }
 
@@ -57,6 +64,7 @@ async function deleteCoupon(id) {
   if (!coupon) {
     throw createError("Coupon not found", 404);
   }
+  await redisClient.del(`coupon:${id}`);
   return coupon;
 }
 
