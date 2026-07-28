@@ -6,6 +6,7 @@ const {
   createOrderValidation,
   cashPaymentValidation,
   stripeCheckoutValidation,
+  stripeIntentValidation,
   stripeVerifyValidation,
 } = require("../validation/order.validation");
 const validate = require("../middlewares/validate.middleware");
@@ -28,6 +29,14 @@ router.post(
   authMiddleware,
   validate(cashPaymentValidation),
   orderController.payOrderWithCash
+);
+
+// Route to create a Stripe Payment Intent for an existing order
+router.post(
+  "/:orderId/pay/stripe/intent",
+  authMiddleware,
+  validate(stripeIntentValidation),
+  orderController.createStripePaymentIntent
 );
 
 // Route to create a Stripe Checkout Session for an existing order

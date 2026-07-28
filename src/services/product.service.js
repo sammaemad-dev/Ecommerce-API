@@ -2,11 +2,8 @@ const Product = require("../models/product.model");
 const Category = require("../models/category.model");
 const SubCategory = require("../models/subCategory.model");
 const ApiFeatures = require("../utils/apiFeatures");
-
-const {
-  uploadToCloudinary,
-  deleteFromCloudinary,
-} = require("../utils/cloudinaryUtils");
+const { uploadToCloudinary, deleteFromCloudinary } = require("../utils/cloudinaryUtils");
+const { getEmbedding } = require("../utils/embedding");
 
 function createError(message, statusCode) {
   const error = new Error(message);
@@ -29,6 +26,12 @@ async function createProduct(data, files, userId) {
   ) {
     throw createError("Missing required product fields", 400);
   }
+   
+  const textForEmbedding=`${payload.name} ${payload.category} ${payload.description}`;
+  const embedding = await getEmbedding(textForEmbedding);
+
+  payload.embedding = embedding;
+
 
   const category = await Category.findById(categoryId);
   if (!category) {
@@ -71,6 +74,7 @@ async function createProduct(data, files, userId) {
   return product;
 }
 
+
 async function getAllProducts(query) {
   // const productCount = await Product.countDocuments({ isActive: true });
   const features = new ApiFeatures(
@@ -98,17 +102,7 @@ async function getAllProducts(query) {
   };
 }
 
-async function getProductById(productId) {
-  const product = await Product.findById(productId)
-    .populate("category", "name")
-    .populate("subCategory", "name");
 
-  if (!product) {
-    throw createError("Product not found", 404);
-  }
-
-  return product;
-}
 
 async function updateProduct(productId, data, files) {
   const product = await Product.findById(productId);
@@ -140,6 +134,12 @@ async function updateProduct(productId, data, files) {
     }
   }
 
+  if(payload.name || payload.category || payload.description) {
+    const textForEmbedding=`${payload.name || product.name} ${payload.category || product.category} ${payload.description || product.description}`;
+    const embedding = await getEmbedding(textForEmbedding);
+    payload.embedding = embedding;
+  }
+  
   if (files && files.length > 0) {
     const uploadedImages = [];
 
@@ -182,6 +182,19 @@ async function updateProduct(productId, data, files) {
   await product.save();
   return product;
 }
+
+async function getProductById(productId) {
+  const product = await Product.findById(productId)
+    .populate("category", "name")
+    .populate("subCategory", "name");
+  if (!product) {
+    throw createError("Product not found", 404);
+  }
+
+  return product;
+}
+
+
 
 async function deleteProduct(productId) {
   const product = await Product.findById(productId);

@@ -57,6 +57,7 @@ const cancelOrderValidation = Joi.object({
 });
 
 const adminOrdersFilterValidation = Joi.object({
+  userId: Joi.string().hex().length(24).optional(),
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(10),
   status: Joi.string()
@@ -121,7 +122,7 @@ const updateOrderStatusValidation = Joi.object({
       "any.required": "Order status is required.",
       "any.only": "Invalid order status.",
     }),
-  adminNote: Joi.string().trim().max(500).optional(),
+  adminNote: Joi.string().trim().max(1000).optional(),
 });
 
 const cashPaymentValidation = Joi.object({
@@ -138,6 +139,10 @@ const stripeCheckoutValidation = Joi.object({
   }),
 });
 
+const stripeIntentValidation = Joi.object({
+  orderId: orderIdSchema,
+});
+
 const stripeVerifyValidation = Joi.object({
   orderId: orderIdSchema,
   sessionId: Joi.string()
@@ -150,27 +155,25 @@ const stripeVerifyValidation = Joi.object({
     }),
 });
 
-// const searchOrdersValidation = {
-//   query: Joi.object({
-//     keyword: Joi.string()
-//       .trim()
-//       .min(1)
-//       .required()
-//       .messages({
-//         "any.required": "Search keyword is required",
-//         "string.empty": "Search keyword is required",
-//         "string.min": "Search keyword cannot be empty",
-//       }),
-//   }),
-// };
-
 const searchOrdersValidation = Joi.object({
+<<<<<<< HEAD
   //aya: update the previous one
   search: Joi.string().trim().min(1).required().messages({
     "any.required": "Search keyword is required.",
     "string.empty": "Search keyword is required.",
     "string.min": "Search keyword cannot be empty.",
   }),
+=======
+  keyword: Joi.string()
+    .trim()
+    .min(1)
+    .required()
+    .messages({
+      "any.required": "Search keyword is required",
+      "string.empty": "Search keyword is required",
+      "string.min": "Search keyword cannot be empty",
+    }),
+>>>>>>> 06954e417c8330651a7fff3ac3f56654f971b99f
 });
 
 module.exports = {
@@ -182,6 +185,8 @@ module.exports = {
   updateOrderStatusValidation,
   cashPaymentValidation,
   stripeCheckoutValidation,
+  stripeIntentValidation,
   stripeVerifyValidation,
   searchOrdersValidation,
+  exportOrdersValidation
 };
