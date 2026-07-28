@@ -8,6 +8,7 @@ const {
 } = require("../utils/cloudinaryUtils");
 const { getEmbedding } = require("../utils/embedding");
 const redisClient = require("../config/redis");
+const removeCacheKey = require("../utils/removeCacheKey");
 
 function createError(message, statusCode) {
   const error = new Error(message);
@@ -74,6 +75,7 @@ async function createProduct(data, files, userId) {
   }
 
   const product = await Product.create(payload);
+  await removeCacheKey("dashboard");
   return product;
 }
 
@@ -181,6 +183,7 @@ async function updateProduct(productId, data, files) {
   Object.assign(product, payload);
   await product.save();
   await redisClient.del(`product:${productId}`);
+  await removeCacheKey("dashboard");
   return product;
 }
 
@@ -225,6 +228,7 @@ async function deleteProduct(productId) {
   // await Product.findByIdAndDelete(productId);
   await product.deleteOne(); //aya: better than findByIdAndDelete to avoid mongoose performs another query
   await redisClient.del(`product:${productId}`);
+  await removeCacheKey("dashboard");
 }
 
 module.exports = {
