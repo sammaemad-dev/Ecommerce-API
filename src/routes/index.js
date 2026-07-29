@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-
 const authRoutes = require("./auth.route");
 const productRoutes = require("./product.route");
 const categoryRoutes = require("./category.route");
@@ -12,10 +11,9 @@ const orderRoutes = require("./order.route");
 const adminOrderRoutes = require("./adminOrder.route");
 const dashboardRoutes = require("./dashboard.route");
 const exportRoutes = require("./export.route");
-const searchRoutes = require("./search.route");
-const adminCartRoutes = require("./adminCart.route");
 const adminWishlistRoutes = require("./adminWishlist.route");
-
+const searchRoutes = require("./search.route");
+const elasticRoutes = require("./elasticSearch.route");
 router.use("/admin/export", exportRoutes);
 router.use("/auth", authRoutes);
 router.use("/products", productRoutes);
@@ -25,11 +23,10 @@ router.use("/carts", cartRoutes);
 router.use("/wishlist", wishlistRoutes);
 router.use("/coupons", couponRoutes);
 router.use("/orders", orderRoutes);
-// router.use("/api/admin/orders", adminOrderRoutes);
 router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/dashboard", dashboardRoutes);
-router.use("/admin/cart", adminCartRoutes);
 router.use("/admin/wishlists", adminWishlistRoutes);
 router.use("/search", searchRoutes);
+router.use("/elastic-search", elasticRoutes);
 
 module.exports = router;

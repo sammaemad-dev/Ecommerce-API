@@ -37,6 +37,7 @@ const registerValidation = Joi.object({
       "any.required": "Password is required.",
     }),
   confirmPassword: Joi.string().valid(Joi.ref("password")).required().messages({
+    //aya: add confirmPassword to match register with resetpassword
     "any.only": "Passwords do not match.",
     "any.required": "Confirm password is required.",
   }),

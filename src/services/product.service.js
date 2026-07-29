@@ -75,6 +75,7 @@ async function createProduct(data, files, userId) {
   }
 
   const product = await Product.create(payload);
+  await syncProduct(product);
   await removeCacheKey("dashboard");
   return product;
 }
@@ -182,6 +183,7 @@ async function updateProduct(productId, data, files) {
 
   Object.assign(product, payload);
   await product.save();
+  await syncProduct(product);
   await redisClient.del(`product:${productId}`);
   await removeCacheKey("dashboard");
   return product;
@@ -227,6 +229,7 @@ async function deleteProduct(productId) {
 
   // await Product.findByIdAndDelete(productId);
   await product.deleteOne(); //aya: better than findByIdAndDelete to avoid mongoose performs another query
+  await deleteProductFromIndex(product._id);
   await redisClient.del(`product:${productId}`);
   await removeCacheKey("dashboard");
 }

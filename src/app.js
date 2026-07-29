@@ -25,7 +25,7 @@ app.use(
       callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
-  })
+  }),
 );
 
 app.use(morgan("dev"));
@@ -33,12 +33,13 @@ app.use(morgan("dev"));
 app.use(
   "/api/webhooks",
   express.raw({ type: "application/json" }),
-  paymentRoutes
+  paymentRoutes,
 );
 
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api", routes);
+
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;

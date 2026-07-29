@@ -21,7 +21,7 @@ const uploadToCloudinary = async (filePath, folder) => {
     throw new Error(`Cloudinary upload failed: ${err.message}`);
   } finally {
     try {
-      await fs.unlink(filePath); //to remove temporary file whether the upload succeeds or fails,
+      await fs.unlink(filePath); //aya: to remove temporary file whether the upload succeeds or fails,
     } catch (err) {
       console.warn(`Could not delete temporary file: ${filePath}`);
     }
