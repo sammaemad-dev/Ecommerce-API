@@ -11,6 +11,8 @@ const orderRoutes = require("./order.route");
 const adminOrderRoutes = require("./adminOrder.route");
 const dashboardRoutes = require("./dashboard.route");
 const exportRoutes = require("./export.route");
+const notificationRoutes = require("./notification.route");
+const adminCartRoutes = require("./adminCart.route");
 const adminWishlistRoutes = require("./adminWishlist.route");
 const searchRoutes = require("./search.route");
 const elasticRoutes = require("./elasticSearch.route");
@@ -26,7 +28,10 @@ router.use("/orders", orderRoutes);
 router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/dashboard", dashboardRoutes);
 router.use("/admin/wishlists", adminWishlistRoutes);
+// router.get("/search",searchRoutes);
+router.use("/notifications", notificationRoutes);
 router.use("/search", searchRoutes);
 router.use("/elastic-search", elasticRoutes);
+
 
 module.exports = router;

@@ -2,7 +2,8 @@ const User = require("../models/user.model");
 const OTP = require("../models/OTP.model");
 const tokenService = require("./token.service");
 const generateOTP = require("../utils/generateOTP");
-const sendEmail = require("../utils/sendEmail");
+// const sendEmail = require("../utils/sendEmail");
+const emailService = require("./email.services");
 const bcrypt = require("bcryptjs");
 
 const OTP_EXPIRY_MINUTES = 10;
@@ -40,11 +41,8 @@ async function register(data) {
   });
 
   try {
-    await sendEmail({
-      to: email,
-      subject: "Verify your account",
-      text: `Your verification code is ${otp}. It expires in ${OTP_EXPIRY_MINUTES} minutes.`,
-    });
+    await emailService.sendOTPEmail(email, otp);
+    // await emailService.sendOTPEmail(email, otp);
   } catch (emailErr) {
     await OTP.deleteOne({ email });
     throw createError(
@@ -99,8 +97,11 @@ async function verifyOTP(data) {
 }
 
 async function login(data) {
-  const user = await User.findOne({ email: data.email }).select("+password");
+  // const email = data.email.trim().toLowerCase();
+  // const user = await User.findOne({ email: data.email }).select("+password");
+  const email = data.email.trim().toLowerCase();
 
+  const user = await User.findOne({ email }).select("+password");
   if (!user) {
     throw createError("Invalid email or password", 401);
   }
@@ -145,15 +146,30 @@ async function forgotPassword(data) {
         email,
       },
     });
+    // await otpRecord.save();
+
+    // await emailService.sendOTPEmail(email, otp);
+
+    // return { email };
+
     await otpRecord.save();
 
-    await sendEmail({
-      to: email,
-      subject: "Password Reset Request",
-      text: `Your verification code is ${otp}. It expires in ${OTP_EXPIRY_MINUTES} minutes.`,
-    });
+try {
 
-    return { email };
+  await emailService.sendOTPEmail(email, otp);
+
+} catch (err) {
+
+  await OTP.deleteOne({ _id: otpRecord._id });
+
+  throw createError(
+    "Could not send password reset email.",
+    502
+  );
+
+}
+
+return { email };
   } catch (e) {
     throw createError(`${e.message}`, e.statusCode);
   }

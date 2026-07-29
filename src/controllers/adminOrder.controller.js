@@ -1,6 +1,6 @@
 const Order = require("../models/order.model");
 const User = require("../models/user.model");
-const { updateAdminOrderStatus } = require("../services/order.service");
+// const { updateAdminOrderStatus } = require("../services/order.service");
 const getAllOrders = async (req, res) => {
   try {
    const { page, limit } = req.validatedData;
