@@ -4,6 +4,7 @@ const tokenService = require("./token.service");
 const generateOTP = require("../utils/generateOTP");
 const sendEmail = require("../utils/sendEmail");
 const bcrypt = require("bcryptjs");
+const removeCacheKey = require("../utils/removeCacheKey");
 
 const OTP_EXPIRY_MINUTES = 10;
 
