@@ -24,6 +24,7 @@ const {
   updateProfileValidation,
   changePasswordValidation,
 } = require("../validation/user.validation");
+const { authLimit } = require("../middlewares/rateLmit");
 
 const router = require("express").Router();
 
@@ -33,17 +34,17 @@ router.get("/checkAuthHealth", authMiddleware, (req, res) => {
 });
 
 
-router.post("/register", validate(registerValidation), register);
-router.post("/login", validate(loginValidation), login);
+router.post("/register", authLimit, validate(registerValidation), register);
+router.post("/login", authLimit, validate(loginValidation), login);
 router.post("/refresh", refresh);
-router.post("/verifyOTP", validate(verifyOTPValidation), verifyOTP);
+router.post("/verifyOTP", authLimit, validate(verifyOTPValidation), verifyOTP);
 router.post("/logout", logout);
-router.post("/forgotPassword", validate(forgotPasswordValidation), forgotPassword);
-router.post("/resetPassword", validate(resetPasswordValidation), resetPassword);
+router.post("/forgotPassword", authLimit, validate(forgotPasswordValidation), forgotPassword);
+router.post("/resetPassword", authLimit, validate(resetPasswordValidation), resetPassword);
 
 // Haidy: User Profile routes
-router.get("/profile", authMiddleware, getProfile);
-router.put("/profile", authMiddleware, validate(updateProfileValidation), updateProfile);
-router.put("/change-password", authMiddleware, validate(changePasswordValidation), changePassword);
+router.get("/profile", authLimit, authMiddleware, getProfile);
+router.put("/profile", authLimit, authMiddleware, validate(updateProfileValidation), updateProfile);
+router.put("/change-password", authLimit, authMiddleware, validate(changePasswordValidation), changePassword);
 
 module.exports = router;
