@@ -596,3 +596,153 @@ Query params (all optional):
 Example: /api/admin/export/orders?format=xlsx&status=shipped
 
 note : generates and downloads a file containing the orders data. requires admin role.
+
+---------------------------------------------------
+# CATEGORY ENDPOINTS
+---------------------------------------------------
+
+# 48 - Get All Categories
+method : GET
+url : http://localhost:3000/api/categories
+
+header : none
+Body : none
+
+note : returns all categories.
+
+# 49 - Get Category by ID
+method : GET
+url : http://localhost:3000/api/categories/[CATEGORY_ID]
+
+header : none
+Body : none
+
+note : returns a specific category by its ID.
+
+# 50 - Create Category (Admin)
+method : POST
+url : http://localhost:3000/api/categories
+
+header : Authorization: Bearer <token>, Content-Type: multipart/form-data
+Body : form-data:
+- name: "Category Name"
+- description: "Description here"
+- image: [file]
+
+note : creates a new category. requires admin role.
+
+# 51 - Update Category (Admin)
+method : PUT
+url : http://localhost:3000/api/categories/[CATEGORY_ID]
+
+header : Authorization: Bearer <token>, Content-Type: multipart/form-data
+Body : form-data:
+- name: "Updated Name"
+
+note : updates an existing category. requires admin role.
+
+# 52 - Delete Category (Admin)
+method : DELETE
+url : http://localhost:3000/api/categories/[CATEGORY_ID]
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : deletes a category. requires admin role.
+
+---------------------------------------------------
+# SUBCATEGORY ENDPOINTS
+---------------------------------------------------
+
+# 53 - Get All SubCategories
+method : GET
+url : http://localhost:3000/api/subcategories
+
+header : none
+Body : none
+
+note : returns all subcategories.
+
+# 54 - Get SubCategory by ID
+method : GET
+url : http://localhost:3000/api/subcategories/[SUBCATEGORY_ID]
+
+header : none
+Body : none
+
+note : returns a specific subcategory by its ID.
+
+# 55 - Create SubCategory (Admin)
+method : POST
+url : http://localhost:3000/api/subcategories
+
+header : Authorization: Bearer <token>, Content-Type: multipart/form-data
+Body : form-data:
+- name: "SubCategory Name"
+- categoryId: "[CATEGORY_ID]"
+- image: [file]
+
+note : creates a new subcategory linked to a category. requires admin role.
+
+# 56 - Update SubCategory (Admin)
+method : PUT
+url : http://localhost:3000/api/subcategories/[SUBCATEGORY_ID]
+
+header : Authorization: Bearer <token>, Content-Type: multipart/form-data
+Body : form-data:
+- name: "Updated Name"
+
+note : updates a subcategory. requires admin role.
+
+# 57 - Delete SubCategory (Admin)
+method : DELETE
+url : http://localhost:3000/api/subcategories/[SUBCATEGORY_ID]
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : deletes a subcategory. requires admin role.
+
+---------------------------------------------------
+# SEARCH ENDPOINTS
+---------------------------------------------------
+
+# 58 - Semantic Search
+method : GET
+url : http://localhost:3000/api/search?q=[QUERY_TEXT]
+
+header : none
+Body : none
+
+note : Performs a semantic search for products using ElasticSearch and Groq embeddings. Requires `GROQ_API_KEY` to be set in `.env`.
+
+---------------------------------------------------
+# ADMIN CART & WISHLIST ENDPOINTS (Admin only)
+---------------------------------------------------
+
+# 59 - Get All Carts (Admin)
+method : GET
+url : http://localhost:3000/api/admin/cart?page=1&limit=10
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : retrieves a paginated list of all user carts. requires admin role.
+
+# 60 - Get All Wishlists (Admin)
+method : GET
+url : http://localhost:3000/api/admin/wishlists?page=1&limit=10
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : retrieves a paginated list of all user wishlists. requires admin role.
+
+# 61 - Get Wishlist Stats (Admin)
+method : GET
+url : http://localhost:3000/api/admin/wishlists/stats
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : retrieves statistics about wishlist usage (e.g. most wishlisted products). requires admin role.

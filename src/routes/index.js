@@ -30,6 +30,6 @@ router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/dashboard", dashboardRoutes);
 // router.use("/admin/cart", adminCartRoutes);
 router.use("/admin/wishlists", adminWishlistRoutes);
-router.get("/search", searchRoutes);
+router.use("/search", searchRoutes);
 
 module.exports = router;
