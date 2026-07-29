@@ -45,11 +45,7 @@ const updateCoupon = asyncHandler(async (req, res) => {
 });
 
 const deleteCoupon = asyncHandler(async (req, res) => {
-<<<<<<< HEAD
-  const id = req.validatedData.id;
-=======
   const { id } = req.validatedData;
->>>>>>> 06954e417c8330651a7fff3ac3f56654f971b99f
   await couponService.deleteCoupon(id);
 
   res.status(200).json({

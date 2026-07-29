@@ -13,7 +13,7 @@ const adminOrderRoutes = require("./adminOrder.route");
 const dashboardRoutes = require("./dashboard.route");
 const exportRoutes = require("./export.route");
 const searchRoutes = require("./search.route");
-const adminCartRoutes = require("./adminCart.route");
+// const adminCartRoutes = require("./adminCart.route");
 const adminWishlistRoutes = require("./adminWishlist.route");
 
 router.use("/admin/export", exportRoutes);
@@ -28,8 +28,8 @@ router.use("/orders", orderRoutes);
 // router.use("/api/admin/orders", adminOrderRoutes);
 router.use("/admin/orders", adminOrderRoutes);
 router.use("/admin/dashboard", dashboardRoutes);
-router.use("/admin/cart", adminCartRoutes);
+// router.use("/admin/cart", adminCartRoutes);
 router.use("/admin/wishlists", adminWishlistRoutes);
-router.get("/search",searchRoutes);
+router.get("/search", searchRoutes);
 
 module.exports = router;

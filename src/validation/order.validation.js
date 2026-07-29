@@ -156,24 +156,12 @@ const stripeVerifyValidation = Joi.object({
 });
 
 const searchOrdersValidation = Joi.object({
-<<<<<<< HEAD
   //aya: update the previous one
   search: Joi.string().trim().min(1).required().messages({
     "any.required": "Search keyword is required.",
     "string.empty": "Search keyword is required.",
     "string.min": "Search keyword cannot be empty.",
   }),
-=======
-  keyword: Joi.string()
-    .trim()
-    .min(1)
-    .required()
-    .messages({
-      "any.required": "Search keyword is required",
-      "string.empty": "Search keyword is required",
-      "string.min": "Search keyword cannot be empty",
-    }),
->>>>>>> 06954e417c8330651a7fff3ac3f56654f971b99f
 });
 
 module.exports = {
@@ -188,5 +176,5 @@ module.exports = {
   stripeIntentValidation,
   stripeVerifyValidation,
   searchOrdersValidation,
-  exportOrdersValidation
+  exportOrdersValidation,
 };
