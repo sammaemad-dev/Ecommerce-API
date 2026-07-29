@@ -16,6 +16,9 @@ const adminCartRoutes = require("./adminCart.route");
 const adminWishlistRoutes = require("./adminWishlist.route");
 const searchRoutes = require("./search.route");
 const elasticRoutes = require("./elasticSearch.route");
+const { apiLimit } = require("../middlewares/rateLmit");
+
+router.use(apiLimit);
 router.use("/admin/export", exportRoutes);
 router.use("/auth", authRoutes);
 router.use("/products", productRoutes);
