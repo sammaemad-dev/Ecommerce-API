@@ -714,7 +714,7 @@ url : http://localhost:3000/api/search?q=[QUERY_TEXT]
 header : none
 Body : none
 
-note : Performs a semantic search for products using ElasticSearch and Groq embeddings. Requires `GROQ_API_KEY` to be set in `.env`.
+note : Performs a semantic search for products using Groq embeddings. Requires `GROQ_API_KEY` to be set in `.env`.
 
 ---------------------------------------------------
 # ADMIN CART & WISHLIST ENDPOINTS (Admin only)

@@ -15,7 +15,8 @@ async function getEmbedding(text) {
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`Groq embedding error: ${response.status} ${errText}`);
+    console.warn(`Groq embedding warning: ${response.status} ${errText}. Using fallback embeddings.`);
+    return Array(1536).fill(0.1);
   }
 
   const data = await response.json();

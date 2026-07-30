@@ -9,6 +9,7 @@ const {
 const { getEmbedding } = require("../utils/embedding");
 const redisClient = require("../config/redis");
 const removeCacheKey = require("../utils/removeCacheKey");
+const { syncProduct, deleteProductFromIndex } = require("../utils/elasticSearchSync");
 
 function createError(message, statusCode) {
   const error = new Error(message);
