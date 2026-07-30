@@ -746,3 +746,62 @@ header : Authorization: Bearer <token>
 Body : none
 
 note : retrieves statistics about wishlist usage (e.g. most wishlisted products). requires admin role.
+
+---------------------------------------------------
+# ELASTIC SEARCH ENDPOINTS
+---------------------------------------------------
+
+# 62 - Full Text Search via Elasticsearch
+method : GET
+url : http://localhost:3000/api/elastic-search?query=[QUERY_TEXT]
+
+header : none
+Body : none
+
+note : Performs a fast full-text search directly against the Elasticsearch cluster for product indexing.
+
+---------------------------------------------------
+# NOTIFICATION ENDPOINTS
+---------------------------------------------------
+
+# 63 - Get My Notifications
+method : GET
+url : http://localhost:3000/api/notifications
+
+header : Authorization: Bearer <token>
+Body : none
+
+note : retrieves all notifications for the currently logged-in user, sorted newest to oldest.
+
+# 64 - Mark Notification as Read
+method : PATCH
+url : http://localhost:3000/api/notifications/[NOTIFICATION_ID]/read
+
+header : Authorization: Bearer <token>
+Body : none
+
+
+# 65 - Mark All Notifications as Read
+method : PATCH
+url : http://localhost:3000/api/notifications/read-all
+
+header : Authorization: Bearer <token>
+Body : none
+
+
+# 66 - Delete Notification
+method : DELETE
+url : http://localhost:3000/api/notifications/[NOTIFICATION_ID]
+
+header : Authorization: Bearer <token>
+Body : none
+
+
+# 67 - Clear All Notifications
+method : DELETE
+url : http://localhost:3000/api/notifications
+
+header : Authorization: Bearer <token>
+Body : none
+
+

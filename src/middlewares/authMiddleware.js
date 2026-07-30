@@ -21,6 +21,7 @@ const authMiddleware = async (req, res, next) => {
         req.user = { _id: user._id, role: user.role }
         next()
     } catch (e) {
+        console.error("Auth Error:", e);
         return res.status(401).json({ error: "Invalid or expired token" })
     }
 }
