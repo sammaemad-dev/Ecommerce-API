@@ -1,27 +1,28 @@
-require("dotenv").config();
+const { pipeline } = require('@xenova/transformers');
 
-async function getEmbedding(text) {
-  const response = await fetch('https://api.groq.com/openai/v1/embeddings', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      input: text,
-      model: 'nomic-embed-text-v1_5',
-    }),
-  });
+class PipelineSingleton {
+    static task = 'feature-extraction';
+    static model = 'Xenova/all-MiniLM-L6-v2';
+    static instance = null;
 
-  if (!response.ok) {
-    const errText = await response.text();
-    console.warn(`Groq embedding warning: ${response.status} ${errText}. Using fallback embeddings.`);
-    return Array(1536).fill(0.1);
-  }
-
-  const data = await response.json();
-  return data.data[0].embedding;
+    static async getInstance(progress_callback = null) {
+        if (this.instance === null) {
+            this.instance = pipeline(this.task, this.model, { progress_callback });
+        }
+        return this.instance;
+    }
 }
 
+async function getEmbedding(text) {
+    try {
+        const extractor = await PipelineSingleton.getInstance();
+        const output = await extractor(text, { pooling: 'mean', normalize: true });
+
+        return Array.from(output.data);
+    } catch (error) {
+        console.error("Error generating embedding locally:", error);
+        return Array(384).fill(0);
+    }
+}
 
 module.exports = { getEmbedding };

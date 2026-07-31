@@ -12,28 +12,43 @@ const semanticSearchProducts = asyncHandler(async (req, res) => {
 
   const queryEmbedding = await getEmbedding(q);
 
-  const results = await Product.aggregate([
-    {
-      $vectorSearch: {
-        index: "vector_index",
-        path: "embedding",
-        queryVector: queryEmbedding,
-        numCandidates: Number(limit) * 10,
-        limit: Number(limit),
-      },
-    },
-    {
-      $project: {
-        name: 1,
-        description: 1,
-        category: 1,
-        price: 1,
-        score: { $meta: "vectorSearchScore" },
-      },
-    },
-  ]);
+  // Fetch all products that have an embedding
+  const products = await Product.find(
+    { embedding: { $exists: true, $not: { $size: 0 } } },
+    "name description category price embedding"
+  );
 
-  res.json(results);
+  // Compute cosine similarity score for each product
+  const results = products.map((product) => {
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+
+    for (let i = 0; i < queryEmbedding.length; i++) {
+      dotProduct += queryEmbedding[i] * product.embedding[i];
+      normA += queryEmbedding[i] * queryEmbedding[i];
+      normB += product.embedding[i] * product.embedding[i];
+    }
+
+    let score = 0;
+    if (normA !== 0 && normB !== 0) {
+      score = dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    }
+
+    return {
+      _id: product._id,
+      name: product.name,
+      description: product.description,
+      category: product.category,
+      price: product.price,
+      score,
+    };
+  });
+
+  // Sort by score descending
+  results.sort((a, b) => b.score - a.score);
+
+  res.json(results.slice(0, Number(limit)));
 });
 
 module.exports = {
