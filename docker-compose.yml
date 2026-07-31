@@ -6,20 +6,10 @@ services:
     env_file:
       - ./.env
     command: npm run dev
-    environment:
-      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongo:27017/ecommerce?authSource=admin
     depends_on:
-      mongo:
-        condition: service_started
       es:
         condition: service_healthy
-  mongo:
-    image: mongo
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
-    volumes:
-      - mongo_data:/data/db
+
   redis:
     image: redis:alpine
   es:
@@ -48,5 +38,4 @@ services:
     depends_on:
       - es
 volumes:
-  mongo_data:
   es_data:
