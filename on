@@ -1,0 +1,12 @@
+[1mdiff --git a/package.json b/package.json[m
+[1mindex 60c6377..636ff30 100644[m
+[1m--- a/package.json[m
+[1m+++ b/package.json[m
+[36m@@ -12,6 +12,7 @@[m
+   "license": "ISC",[m
+   "type": "commonjs",[m
+   "dependencies": {[m
+[32m+[m[32m    "bcrypt": "^6.0.0",[m
+     "bcryptjs": "^3.0.3",[m
+     "cloudinary": "^2.10.0",[m
+     "cookie-parser": "^1.4.7",[m
