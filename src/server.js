@@ -50,3 +50,4 @@ mongoose
     console.log(" Database Error:");
     console.log(err);
   });
+module.exports = app;
